@@ -1,4 +1,5 @@
 trainedModels/*
+trainedStandardModels/*
 logs/*
 data/mpi3d_real
 data/threeDots

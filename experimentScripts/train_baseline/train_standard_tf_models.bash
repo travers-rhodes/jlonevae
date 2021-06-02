@@ -7,7 +7,7 @@
 # activate conda within this child script
 conda activate lil_disentanglement_challenge
 
-export PYTHONPATH="..:../disentanglement_lib"
-export DISENTANGLEMENT_LIB_DATA="../scratch/dataset"
-export NDC_ROOT=$(realpath "../")
-python3 train_standard_tf_models.py
+export PYTHONPATH="./:./disentanglement_lib"
+export DISENTANGLEMENT_LIB_DATA="data"
+export NDC_ROOT=$(realpath "./")
+python3 ./jlonevae_lib/baseline_lib/train/train_baseline_models.py
