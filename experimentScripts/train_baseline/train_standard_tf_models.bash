@@ -10,4 +10,5 @@ conda activate lil_disentanglement_challenge
 export PYTHONPATH="./:./disentanglement_lib"
 export DISENTANGLEMENT_LIB_DATA="data"
 export NDC_ROOT=$(realpath "./")
+export TF_FORCE_GPU_ALLOW_GROWTH=true
 python3 ./jlonevae_lib/baseline_lib/train/train_baseline_models.py
