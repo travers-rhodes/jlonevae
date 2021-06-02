@@ -1,0 +1,2 @@
+dataset.name="mpi3d_real"
+local_sample_factors.denylist_factors=(0,1,4) # color,shape,background color not ordered

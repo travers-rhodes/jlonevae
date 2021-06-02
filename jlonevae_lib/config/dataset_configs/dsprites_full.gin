@@ -1,0 +1,2 @@
+dataset.name="dsprites_full"
+local_sample_factors.denylist_factors=[0] # 0 (shape) is not ordered. no "locality"

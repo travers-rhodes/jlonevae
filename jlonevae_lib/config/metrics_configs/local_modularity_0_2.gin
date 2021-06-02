@@ -1,0 +1,2 @@
+include 'local_modularity_base.gin'
+local_sample_factors.locality_proportion=0.2

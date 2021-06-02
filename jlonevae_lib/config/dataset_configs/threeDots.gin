@@ -1,0 +1,2 @@
+dataset.name="threeDots"
+local_sample_factors.denylist_factors=[] # all factors ordered. great dataset.

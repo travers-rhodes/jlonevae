@@ -1,0 +1,2 @@
+dataset.name="cars3d"
+local_sample_factors.denylist_factors=(2,) # this index is not ordered. no "locality"
