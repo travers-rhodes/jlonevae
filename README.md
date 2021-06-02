@@ -7,7 +7,7 @@ This repository is the official implementation of Local Disentanglement in Varia
 
 ## Requirements
 
-To install requirements for a CUDA-enabled workstation:
+To install requirements for a CUDA-enabled workstation (strongly recommended):
 ```setup
 conda env create -f environment.yml
 conda bash init
@@ -21,16 +21,22 @@ conda bash init
 
 ## Training
 
-To train the three-dots models in the paper, run:
+An example script how to train a single JL1-VAE model using a small cache of three-dots
+data (20,000 images) for only 30,000 training batches of 64 images can be run using
+```train
+./exampleScripts/train_jlonevae_threeDots.bash
+```
+
+To train the full three-dots models in the paper, run:
 ```train
 ./experimentScripts/train_jlonevae/train_threeDots.bash
 ```
 The first time that is run it will take a few minutes to create a cache of
-training images. After that it will re-use that cache of images.
-
+500,000 training images in the `data/` folder, and will train for 300,000 batches of 64 images. 
+After that it will re-use the same cache of images.
 
 To train the mpi3d-multi models in the paper,
-download mpi3d\_real (12 gigabytes, so takes a while to download) by running
+download [`mpi3d_real`](https://github.com/rr-learning/disentanglement_dataset) (12 gigabytes, so takes a while to download) by running
 ```download
 cd data
 source download_mpi3d_real.sh
@@ -41,7 +47,9 @@ and then run
 ./experimentScripts/train_jlonevae/train_mpi3d_multi.bash
 ```
 
-In both instances the trained models will be stored in subfolder of `trainedModels`.
+Training logs are written to the `./logs` directory and the trained model is
+written to `./trainedModels` (both as a PyTorch JIT module for use with
+[`disentanglement_lib`](https://github.com/google-research/disentanglement_lib) and also using `torch.save(model.state_dict(), ...)`).
 
 ## Evaluation
 To evaluate the models qualitatively, from the base directory start a jupyter
