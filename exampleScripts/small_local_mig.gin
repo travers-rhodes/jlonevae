@@ -1,0 +1,8 @@
+evaluation.evaluation_fn = @local_mig
+evaluation.random_seed = 0
+local_mig.num_train=1000
+local_mig.num_local_clusters=3
+local_sample_factors.continuity_cutoff=10
+discretizer.discretizer_fn = @histogram_discretizer
+discretizer.num_bins = 5 
+local_sample_factors.locality_proportion=0.1

@@ -21,8 +21,6 @@ from pathlib import Path
 
 THREE_DOTS_CACHE_PATH = os.path.join(
     os.environ.get("DISENTANGLEMENT_LIB_DATA", "."), "threeDots")
-THREE_DOTS_CACHE_ZIP = os.path.join(THREE_DOTS_CACHE_PATH,
-    "trainingCache.npz")
 
 class ThreeDotsTrainingCache(ground_truth_data.GroundTruthData):
   """Three Dots Dataset Cache for Training
@@ -42,18 +40,20 @@ class ThreeDotsTrainingCache(ground_truth_data.GroundTruthData):
      practically/nicely store in memory. Thus, we use a large random sample
      instead.
   """
-  def __init__(self, seed=0, latent_factor_granularity=64):
-    self.random_state = np.random.RandomState(seed)
+  def __init__(self, seed=0, latent_factor_granularity=64, desiredCacheSize=500000):
+    self.random_cache_generation_state = np.random.RandomState(seed)
     self.threeDotsGenerator = ThreeDots(latent_factor_granularity)
     # if the training cache doesn't exist, create one!
-    if not os.path.exists(THREE_DOTS_CACHE_ZIP):
+    numTotalSamples = int(desiredCacheSize) # 500000 comparable size to dsprites
+    three_dots_cache_zip = os.path.join(THREE_DOTS_CACHE_PATH,
+        f"trainingCache{numTotalSamples}.npz")
+    if not os.path.exists(three_dots_cache_zip):
       print("No three dots cache zip found...creating one")
       Path(THREE_DOTS_CACHE_PATH).mkdir(parents=True, exist_ok=True)
-      numTotalSamples = int(500000) # comparable size to dsprites
       factors, imgs = self.threeDotsGenerator.sample(numTotalSamples,
-        self.random_state)
-      np.savez_compressed(THREE_DOTS_CACHE_ZIP, factors=factors, imgs=imgs)
-    data = np.load(THREE_DOTS_CACHE_ZIP)
+        self.random_cache_generation_state)
+      np.savez_compressed(three_dots_cache_zip, factors=factors, imgs=imgs)
+    data = np.load(three_dots_cache_zip)
     self.fullDataset = data["imgs"]
     self.totalCacheSize = self.fullDataset.shape[0]
     print("Loaded dataset of threeDots data with shape", self.fullDataset.shape)
@@ -64,7 +64,10 @@ class ThreeDotsTrainingCache(ground_truth_data.GroundTruthData):
 
   def sample_observations(self, num, random_state):
     # we have to reshape or else num==1 condenses to int, not array
-    indexArray = self.random_state.choice(self.totalCacheSize, (num,))
+    # in the original submission to NeurIPS this was using self.random_state.
+    # That property has now been renamed to self.random_cache_generation_state
+    # to avoid conflicts. 
+    indexArray = random_state.choice(self.totalCacheSize, (num,))
     return self.fullDataset[indexArray]
 
 class ThreeDots(ground_truth_data.GroundTruthData):

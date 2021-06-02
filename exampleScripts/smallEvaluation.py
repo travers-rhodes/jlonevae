@@ -92,32 +92,16 @@ _study = unsupervised_study_v1.UnsupervisedStudyV1()
 evaluation_configs = sorted(_study.get_eval_config_files())
 
 #Add local config files from lilvae package
-lilvaeMetricConfigPath=get_full_path("jlonevae_lib/config/metrics_configs")
+lilvaeMetricConfigPath=get_full_path("exampleScripts")
 for configFile in os.listdir(lilvaeMetricConfigPath):
     evaluation_configs.append(get_full_path(os.path.join(lilvaeMetricConfigPath, configFile)))
 
-# allow the internal "import 'local_mig_base.gin'" to resolve file name correctly
-# unhelpfully, it still will return an error that it can't find the file (the first place it searches)
-# but print statements show it does get loaded (eventually)
-gin.config.add_config_file_search_path(get_full_path("jlonevae_lib/config/metrics_configs"))
-
 # Compute individual metrics
 expected_evaluation_metrics = [
-#    'dci',
-#    'factor_vae_metric',
-#    'sap_score',    
     'mig', # their mig config
-    'local_mig_0_1',
-    'local_mig_0_2',
-    'local_mig_0_3',
-    'local_mig_0_6',
-    'local_mig_1_0',
-    'modularity_explicitness', # their modularity config
-    'local_modularity_0_1',
-    'local_modularity_0_2',
-    'local_modularity_0_3',
-    'local_modularity_0_6',
-    'local_modularity_1_0',
+    'small_local_mig',
+    'modularity_explicitness',
+    'small_local_modularity',
 ]
 
 # we need a separate dataset config because we need to

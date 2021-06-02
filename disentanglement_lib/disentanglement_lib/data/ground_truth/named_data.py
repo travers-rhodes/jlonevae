@@ -43,6 +43,9 @@ def get_named_ground_truth_data(name):
   if name == "threeDotsCache": 
     # a large random sample from ThreeDots
     return threeDots.ThreeDotsTrainingCache()
+  elif name == "threeDotsCacheSmall":
+    # a small random sample from ThreeDots
+    return threeDots.ThreeDotsTrainingCache(desiredCacheSize=20000)
   elif name == "threeDots":
     return threeDots.ThreeDots()
   elif name == "dsprites_full":
