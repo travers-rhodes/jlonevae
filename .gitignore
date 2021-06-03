@@ -3,6 +3,8 @@ trainedStandardModels/*
 logs/*
 data/mpi3d_real
 data/threeDots
+data/naturalImages
 __pycache__
 .ipynb_checkpoints
 .nfs*
+experimentScripts/visualizations/latentJacobianImages

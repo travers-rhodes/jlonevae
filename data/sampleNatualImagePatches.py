@@ -7,13 +7,13 @@ from pathlib import Path
 import argparse
 parser = argparse.ArgumentParser(description='Sample patches from figures')
 parser.add_argument('--experimentName', default="naturalImages",
-                    help='the folder name to expect/use for the data/model/results')
+                    help='the folder name to use for the data')
 args = parser.parse_args()
 experiment_name = args.experimentName
 
 # The nature paper begins with ten 512x512 images
 # from which 16x16 pixel image patches should be sampled
-large_images = sio.loadmat("data/%s/IMAGES.mat" % experiment_name)['IMAGES']
+large_images = sio.loadmat("%s/IMAGES.mat" % experiment_name)['IMAGES']
 
 # turns out those images are not in the scale from 0 to 1, so scale
 # them accordingly first
@@ -36,7 +36,7 @@ def sample_patches(large_images, num_patches_per_image = 10000):
 train_patches = sample_patches(large_images)
 test_patches = sample_patches(large_images, num_patches_per_image = 1000)
 
-save_folder = "data/%s" % experiment_name
+save_folder = "%s" % experiment_name
 
 Path(save_folder + "/train").mkdir(parents=True, exist_ok=True)
 np.savez_compressed(save_folder + "/train/data.npz", images=train_patches)

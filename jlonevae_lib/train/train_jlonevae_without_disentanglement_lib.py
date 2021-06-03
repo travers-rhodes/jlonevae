@@ -3,10 +3,14 @@
 # For our paper, this is the implementation we use for the naturalImage results
 # for which we do not have ground-truth factors of variation.
 import datetime
+import torch
 import glob
+import math
+import os
 
 from jlonevae_lib.architecture.vae import ConvVAE
-from jlonevae_lib.train.standalone_trainer import StandaloneTrainer
+from jlonevae_lib.architecture.save_model import save_conv_vae
+from jlonevae_lib.train.jlonevae_trainer import JLOneVAETrainer
 from jlonevae_lib.utils.pytorch_npz_dataset import PytorchNpzDataset 
 
 import argparse
@@ -121,14 +125,17 @@ for run_beta in betaVals:
               "_anneal%d" % annealingBatches if annealingBatches != 0 else "", 
               runId)
       print("starting " + new_experiment_name)
-      modelDir = "trainedModels/%s/%s/%s/" % (dataset_name, experimentName, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+      modelDir = "trainedModels/%s/%s/%s/" % (dataset_name, new_experiment_name, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
       data_loader = torch.utils.data.DataLoader(dataset,batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
       trainer = JLOneVAETrainer(model, data_loader,
+          beta=run_beta, gamma=ica_factor,
           device=device, log_dir=modelDir, lr = lr,
           annealingBatches=annealingBatches)
-      num_epochs = int(ceil(num_batches/len(dataset)))
+      print(len(dataset))
+      num_epochs = int(math.ceil(num_batches * batch_size/len(dataset)))
+      print(num_epochs)
       for i in range(num_epochs):
-        trainer.train(record_loss_every=record_loss_every)
+        trainer.train()
       # save a cached version of this model
       save_conv_vae(trainer.model, os.path.join(trainer.log_dir,
         "cache_batch_no%d" % trainer.num_batches_seen))
