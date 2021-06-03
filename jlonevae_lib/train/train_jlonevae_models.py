@@ -19,10 +19,11 @@ import torch
 import torch.utils.data
 import torch.utils.tensorboard
 from torch import nn, optim
-from torch.nn import functional as F
 
 from jlonevae_lib.architecture.vae import ConvVAE
+from jlonevae_lib.architecture.save_model import save_conv_vae
 import jlonevae_lib.train.vae_jacobian as vj
+from jlonevae_lib.train.loss_function import vae_loss_function
 import jlonevae_lib.utils.utils_pytorch as pyu
 
 from pathlib import Path
@@ -30,8 +31,6 @@ import pickle
 import os
 
 import datetime
-
-TESTING=False # Set to True to run a bunch of extra asserts
 
 parser = argparse.ArgumentParser(description='VAE Example')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -102,28 +101,6 @@ class RepresentationExtractor(nn.Module):
         return mu + eps * std
 
 
-# Save the model in a Travers-code-readable way
-def save_conv_vae(convvae, model_folder_path):
-    kwargs = {"latent_dim": convvae.latent_dim,
-              "im_side_len": convvae.im_side_len,
-              "im_channels": convvae.im_channels,
-              "emb_conv_layers_channels": convvae.emb_conv_layers_channels,
-              "emb_conv_layers_strides": convvae.emb_conv_layers_strides,
-              "emb_conv_layers_kernel_sizes": convvae.emb_conv_layers_kernel_sizes,
-              "emb_fc_layers_num_features": convvae.emb_fc_layers_num_features,
-              "gen_fc_layers_num_features": convvae.gen_fc_layers_num_features,
-              "gen_first_im_side_len": convvae.gen_first_im_side_len,
-              "gen_conv_layers_channels": convvae.gen_conv_layers_channels,
-              "gen_conv_layers_strides": convvae.gen_conv_layers_strides,
-              "gen_conv_layers_kernel_sizes": convvae.gen_conv_layers_kernel_sizes
-             }
-    if not os.path.exists(model_folder_path):
-        os.makedirs(model_folder_path)
-    with open(model_folder_path + "/model_args.p", "wb") as f:
-        pickle.dump(kwargs, f)
-    with open(model_folder_path + "/model_type.txt", "w") as f:
-        f.write(convvae.architecture)
-    torch.save(convvae.state_dict(), model_folder_path + "/model_state_dict.pt")
 
 
 # Changes from Locatello:
@@ -186,54 +163,6 @@ model = ConvVAE(
   ).to(device)
 optimizer = optim.Adam(model.parameters(), lr=lr)
 
-# Reconstruction + KL divergence losses summed over all pixels and batch
-# log of the loss when using gaussian is just the mse loss
-def loss_function(recon_x, x, mu, logvar, beta):
-    # To make the units work properly, this should be equal to
-    # the log reconstruction probability, which is
-    # log[N(x, F(z), sigma^2_Recon (assume to be 1 for simplicity))]
-    # We can ignore the constant term, since that won't change our optimization objective.
-    # but we still get a factor of 0.5 here we were missing before
-
-    # confirm that the first dimension of every input tensor is batch_size
-    batch_size = recon_x.shape[0]
-    if TESTING:
-        assert x.shape[0] == batch_size, "x should have batch_size as first dimension"
-        assert mu.shape[0] == batch_size, "mu should have batch_size as first dimension"
-        assert logvar.shape[0] == batch_size, "logvar should have batch_size as first dimension"
-
-    noiselessLogLikelihood = torch.tensor(0)
-    # recon_x is of shape batchsize x im_channels x im_side_len x im_side_len
-    LogLikelihood = - torch.nn.functional.binary_cross_entropy(recon_x, x, reduction='sum')/batch_size
-
-    if TESTING:
-        assert len(LogLikelihood.shape)==0, "LogLikelihood should be scalar"
-  
-    ########### mu is of shape batchsize x latent_dim
-    mu_error = -0.5 * torch.sum(- mu.pow(2))/batch_size
-    if TESTING:
-        assert len(mu_error.shape)==0,"mu_error should be scalar"
-
-    ########### mu is of shape batchsize x latent_dim
-    # note that the 1 is getting broadcast batchsize x latent_dim times 
-    # (so this calc correctly implements Appendix B of Auto-Encoding Variational Bayes)
-    logvar_error = -0.5 * torch.sum(1 + logvar - logvar.exp())/batch_size
-    if TESTING:
-        assert len(logvar_error.shape)==0,"logvar_error should be scalar"
-  
-    #print("kl content", latent_dim + logvar - mu.pow(2) - logvar.exp())
-    # see Appendix B from VAE paper:
-    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
-    # https://arxiv.org/abs/1312.6114
-    # -0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-    KLD = logvar_error + mu_error
-    if TESTING:
-        assert len(KLD.shape)==0,"KLD should be scalar"
-  
-    # LogLikelihood - KLD is a lower bound
-    # We want to maximize that lower bound
-    # So, we take the negative of our lower bound to get the ELBO "cost"
-    return (-LogLikelihood + beta * KLD, -LogLikelihood, KLD, mu_error, logvar_error)
 
 record_loss_every = args.log_interval
 beta=args.beta
@@ -246,32 +175,40 @@ Path(modelDir).mkdir(parents=True, exist_ok=True)
 # empty "results" folder here required for evaluation.py
 Path(modelDir+"/results").mkdir(parents=True, exist_ok=True)
 writer = torch.utils.tensorboard.SummaryWriter(log_dir=logdir)
+
 def train(epoch, num_batches_seen):
+  # set model to "training mode"
   model.train()
+
+  # for each chunk of data 
   for batch_idx, data in enumerate(train_loader):
+    # do annealing and store annealed value to tmp value
     if num_batches_seen < annealingBatches:
       tmp_beta = beta * num_batches_seen / annealingBatches
       tmp_gamma = gamma * num_batches_seen / annealingBatches
     else:
       tmp_beta = beta
       tmp_gamma = gamma
+
+    # move data to device, initialize optimizer, model data, compute loss,
+    # and perform one optimizer step
     data = data.to(device).float()
     optimizer.zero_grad()
     recon_batch, mu, logvar, noisy_mu = model(data)
-    loss, NLL, KLD, mu_err, logvar_err = loss_function(recon_batch, data, mu, logvar, tmp_beta)
+    loss, NLL, KLD, mu_err, logvar_err = vae_loss_function(recon_batch, data, mu, logvar, tmp_beta)
 
+    # short-circuit calc if gamma is 0 (no JL1-VAE loss)
     if tmp_gamma == 0: 
       ICA_loss = torch.tensor(0)
     else:
       ICA_loss = vj.jacobian_loss_function(model, noisy_mu, logvar, device,
           scaling = "lone")
     loss += tmp_gamma * ICA_loss
-
     loss.backward()
     optimizer.step()
 
-    num_batches_seen += 1
     # log to tensorboard
+    num_batches_seen += 1
     if num_batches_seen % record_loss_every == 0:
       writer.add_scalar("ICALoss/train", ICA_loss.item(), num_batches_seen) 
 

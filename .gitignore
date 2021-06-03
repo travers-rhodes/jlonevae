@@ -4,3 +4,4 @@ logs/*
 data/mpi3d_real
 data/threeDots
 __pycache__
+.ipynb_checkpoints

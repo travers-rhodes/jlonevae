@@ -51,6 +51,15 @@ Training logs are written to the `./logs` directory and the trained model is
 written to `./trainedModels` (both as a PyTorch JIT module for use with
 [`disentanglement_lib`](https://github.com/google-research/disentanglement_lib) and also using `torch.save(model.state_dict(), ...)`).
 
+To train the naturalImage models in the paper, first download the data from
+[Bruno Olshausen's website](http://www.rctn.org/bruno/sparsenet/) by running
+```train
+cd data
+source download_natural_image_data.sh
+cd ..
+
+```
+
 ## Evaluation
 To evaluate the models qualitatively, from the base directory start a jupyter
 notebook by running
