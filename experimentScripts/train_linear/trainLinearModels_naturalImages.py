@@ -2,18 +2,19 @@
 import numpy as np
 import datetime
 import glob
-from src.pytorchdatasets.pytorch_npz_dataset import PytorchNpzDataset 
+from jlonevae_lib.utils.pytorch_npz_dataset import PytorchNpzDataset 
 from sklearn.decomposition import FastICA, PCA 
 import torch.utils
 from pathlib import Path
 import os.path
 
 import argparse
-parser = argparse.ArgumentParser(description='Create figures given a dataset')
+parser = argparse.ArgumentParser(description='Train ICA and PCA models on
+    dataset')
 parser.add_argument('--datasetName',  required=True,
-                    help='the folder name to expect/use for the data')
+                    help='the folder name to expect for the data')
 parser.add_argument('--experimentName', required=True,
-                    help='the folder name to expect/use for the model')
+                    help='the folder name to use for the saved models')
 parser.add_argument('--latentDim', default=[10], type=int, nargs="*",
         help='number of latent dimensions to use')
 parser.add_argument('--modelType', default=["PCA"], type=str, nargs="*",
@@ -62,7 +63,7 @@ for latent_dim in latentDimVals:
         print(MSE_loss.item())
         NLL_loss = torch.nn.functional.binary_cross_entropy(torch.tensor(imgrecon_clip, dtype=torch.float), torch.tensor(data, dtype=torch.float), reduction='sum')/batch_size
         print(NLL_loss.item())
-        save_folder = "analyticModels/%s" % experimentName
+        save_folder = "linearModels/%s" % experimentName
         Path(save_folder).mkdir(parents=True, exist_ok=True)
         np.savez(os.path.join(save_folder,"%s_lat%d.npz" %  (modelType, latent_dim)), 
                 MSE_loss = MSE_loss.item(), 

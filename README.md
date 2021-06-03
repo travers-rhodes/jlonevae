@@ -21,20 +21,28 @@ conda bash init
 
 ## Training
 
+### Small example
 An example script how to train a single JL1-VAE model using a small cache of three-dots
 data (20,000 images) for only 30,000 training batches of 64 images can be run using
 ```train
 ./exampleScripts/train_jlonevae_threeDots.bash
 ```
 
+### Full experiments
+#### Three-dots Data
 To train the full three-dots models in the paper, run:
 ```train
 ./experimentScripts/train_jlonevae/train_threeDots.bash
 ```
 The first time that is run it will take a few minutes to create a cache of
 500,000 training images in the `data/` folder, and will train for 300,000 batches of 64 images. 
-After that it will re-use the same cache of images.
+Subsequent runs will re-use the same cache of images.
 
+Training logs are written to the `./logs` directory and the trained model is
+written to a subdirectory of `./trainedModels` (both as a PyTorch JIT module for use with
+[`disentanglement_lib`](https://github.com/google-research/disentanglement_lib) and also using `torch.save(model.state_dict(), ...)`).
+
+#### MPI3D-Multi
 To train the mpi3d-multi models in the paper,
 download [`mpi3d_real`](https://github.com/rr-learning/disentanglement_dataset) (12 gigabytes, so takes a while to download) by running
 ```download
@@ -48,18 +56,23 @@ and then run
 ```
 
 Training logs are written to the `./logs` directory and the trained model is
-written to `./trainedModels` (both as a PyTorch JIT module for use with
+written to a subdirectory of `./trainedModels` (both as a PyTorch JIT module for use with
 [`disentanglement_lib`](https://github.com/google-research/disentanglement_lib) and also using `torch.save(model.state_dict(), ...)`).
 
-To train the naturalImage models in the paper, first download the data from
+#### Natural Images
+To train the natural image models in the paper, first download the data from
 [Bruno Olshausen's website](http://www.rctn.org/bruno/sparsenet/) by running
-```train
+```download
 cd data
 conda activate jlonevae
 ./download_natural_image_data.sh
 ./sampleNatualImagePatches.py
 cd ..
+```
 
+Then, run
+```train
+./experimentScripts/train_jlonevae/train_naturalImages.bash
 ```
 
 ## Evaluation
@@ -70,7 +83,7 @@ conda activate jlonevae
 jupyter notebook
 ```
 Then, open the notebook at 
-`experimentScripts/visualizations/ExampleJacobianValues_ThreeDots.ipynb'
+`experimentScripts/visualizations/ExampleJacobianValues_ThreeDots.ipynb`
 or
 `experimentScripts/visualizations/ExampleJacobianValues-Mpi3d-multi.ipynb`
 to view jacobian column values for trained models.
