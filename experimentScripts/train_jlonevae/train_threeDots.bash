@@ -10,15 +10,11 @@ conda activate jlonevae
 export PYTHONPATH="./:./disentanglement_lib"
 export DISENTANGLEMENT_LIB_DATA="data/"
 export AICROWD_DATASET_NAME="threeDotsCache"
-for latentDim in 10
+for seed in {11..20}
 do
-  for beta in 4
+  for gamma in 0 0.1
   do
-    for gamma in 0 0.1
-    do
-      echo $latentDim
-      python ./jlonevae_lib/train/train_jlonevae_models.py --beta $beta --gamma $gamma --latent-dim $latentDim --epochs 60 --annealingBatches 100000
-    done
+    echo "Running with seed: $seed"
+    python ./jlonevae_lib/train/train_jlonevae_models.py --beta 4 --gamma $gamma --latent-dim 10 --epochs 60 --annealingBatches 100000 --lr 0.0001 --seed $seed
   done
 done
-
