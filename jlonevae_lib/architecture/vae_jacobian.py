@@ -101,3 +101,16 @@ def compute_generator_jacobian_analytic(model,
                     .transpose(1,0)\
                     .reshape(-1, batch_size, im_channels, imsize, imsize)
     return(jacobians_array_reshaped)
+
+def jacobian_loss_function(model, mu, logvar, device):
+    # jacobian shape is (latent_dim, batch_size, output_model_shape)
+    # where the first batch_size rows correspond to the first latent dimension, etc.
+    jacobian = compute_generator_jacobian_optimized(model, mu, epsilon_scale = 0.001, device=device)
+    #print(jacobian.shape)
+    latent_dim = jacobian.shape[0]
+    batch_size = jacobian.shape[1]
+    jacobian = jacobian.reshape((latent_dim, batch_size, -1))
+    obs_dim = jacobian.shape[2]
+    loss = torch.sum(torch.abs(jacobian))/batch_size
+    assert len(loss.shape)==0, "loss should be a scalar"
+    return(loss)

@@ -21,6 +21,8 @@ class JLOneVAETrainer(object):
         log_dir, lr, annealingBatches, record_loss_every=100):
       self.model = model
       self.data_loader = data_loader
+      self.beta = beta
+      self.gamma = gamma
       self.optimizer= torch.optim.Adam(self.model.parameters(), lr=lr)
       self.device = device
       self.log_dir = log_dir
@@ -48,15 +50,14 @@ class JLOneVAETrainer(object):
         data = data.to(self.device)
         self.optimizer.zero_grad()
         recon_batch, mu, logvar, noisy_mu = self.model(data)
-        loss, NegLogLikelihood, KLD, mu_error, logvar_error,
-        noiselessNegLogLikelihood = vae_loss_function(recon_batch, data, mu,
-            logvar, tmp_beta)
+        loss, NegLogLikelihood, KLD, mu_error, logvar_error = vae_loss_function(recon_batch, 
+                                      data, mu, logvar, tmp_beta)
 
         # short-circuit calc if gamma is 0 (no JL1-VAE loss)
         if tmp_gamma == 0:
             ICA_loss = torch.tensor(0)
         else:
-            ICA_loss = vj.jacobian_loss_function(self.model, noisy_mu, logvar, self.device, scaling = self.scaling)
+            ICA_loss = vj.jacobian_loss_function(self.model, noisy_mu, logvar, self.device)
         loss += tmp_gamma * ICA_loss
         loss.backward()
         self.optimizer.step()

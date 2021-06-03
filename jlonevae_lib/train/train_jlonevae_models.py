@@ -172,11 +172,10 @@ trainer = JLOneVAETrainer(model, train_loader, beta, gamma, device,
     logdir, lr, annealingBatches, record_loss_every=100)
 
 print("Starting training. Logging to %s" % logdir)
-num_batches_seen = 0
 for epoch in range(1, args.epochs + 1):
     trainer.train()
     print('====> Epoch: {}'.format(epoch))
-full_save_model_dir = modelDir + "/cache_batch_no%d" % num_batches_seen
+full_save_model_dir = modelDir + "/cache_batch_no%d" % trainer.num_batches_seen
 print("Saving full model info to %s" % full_save_model_dir)
 save_conv_vae(model, full_save_model_dir)
 print("Saving trained model to %s" % modelDir)
