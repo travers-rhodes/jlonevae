@@ -16,14 +16,11 @@ logger.setLevel(logging.ERROR)
 
 import argparse
 import torch
-import torch.utils.data
-import torch.utils.tensorboard
-from torch import nn, optim
+from torch import nn
 
 from jlonevae_lib.architecture.vae import ConvVAE
 from jlonevae_lib.architecture.save_model import save_conv_vae
-import jlonevae_lib.train.vae_jacobian as vj
-from jlonevae_lib.train.loss_function import vae_loss_function
+from jlonevae_lib.train.jlonevae_trainer import JLOneVAETrainer 
 import jlonevae_lib.utils.utils_pytorch as pyu
 
 from pathlib import Path
@@ -100,12 +97,11 @@ class RepresentationExtractor(nn.Module):
         eps = torch.randn_like(std)
         return mu + eps * std
 
-
-
-
 # Changes from Locatello:
-# we have sigmoid activation for reconstruction
-# we have consistent 4x4 kernels (they have two 2x2's in their code)
+# we explicitly have sigmoid activation for reconstruction (they do too when 
+# actually computing loss, so should be equivalent...)
+# we have consistent 4x4 kernels (they have two 2x2's in their code
+# which I think might be a typo in their code)
 vaeShape = "defaultConv"
 emb_conv_layers_channels = [32,32,64,64]
 emb_conv_layers_strides = [2,2,2,2]
@@ -161,8 +157,6 @@ model = ConvVAE(
     gen_conv_layers_strides = gen_conv_layers_strides,
     gen_conv_layers_kernel_sizes = gen_conv_layers_kernel_sizes,
   ).to(device)
-optimizer = optim.Adam(model.parameters(), lr=lr)
-
 
 record_loss_every = args.log_interval
 beta=args.beta
@@ -172,66 +166,20 @@ logdir = "logs/%s/%s" % (experimentName, datetime.datetime.now().strftime("%Y%m%
 modelDir = "trainedModels/%s/%s/representation" % (experimentName, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 Path(logdir).mkdir(parents=True, exist_ok=True)
 Path(modelDir).mkdir(parents=True, exist_ok=True)
-# empty "results" folder here required for evaluation.py
+# empty "results" folder here required later for evaluation.py
 Path(modelDir+"/results").mkdir(parents=True, exist_ok=True)
-writer = torch.utils.tensorboard.SummaryWriter(log_dir=logdir)
+trainer = JLOneVAETrainer(model, train_loader, beta, gamma, device,
+    logdir, lr, annealingBatches, record_loss_every=100)
 
-def train(epoch, num_batches_seen):
-  # set model to "training mode"
-  model.train()
-
-  # for each chunk of data 
-  for batch_idx, data in enumerate(train_loader):
-    # do annealing and store annealed value to tmp value
-    if num_batches_seen < annealingBatches:
-      tmp_beta = beta * num_batches_seen / annealingBatches
-      tmp_gamma = gamma * num_batches_seen / annealingBatches
-    else:
-      tmp_beta = beta
-      tmp_gamma = gamma
-
-    # move data to device, initialize optimizer, model data, compute loss,
-    # and perform one optimizer step
-    data = data.to(device).float()
-    optimizer.zero_grad()
-    recon_batch, mu, logvar, noisy_mu = model(data)
-    loss, NLL, KLD, mu_err, logvar_err = vae_loss_function(recon_batch, data, mu, logvar, tmp_beta)
-
-    # short-circuit calc if gamma is 0 (no JL1-VAE loss)
-    if tmp_gamma == 0: 
-      ICA_loss = torch.tensor(0)
-    else:
-      ICA_loss = vj.jacobian_loss_function(model, noisy_mu, logvar, device,
-          scaling = "lone")
-    loss += tmp_gamma * ICA_loss
-    loss.backward()
-    optimizer.step()
-
-    # log to tensorboard
-    num_batches_seen += 1
-    if num_batches_seen % record_loss_every == 0:
-      writer.add_scalar("ICALoss/train", ICA_loss.item(), num_batches_seen) 
-
-      writer.add_scalar("ELBO/train", loss.item(), num_batches_seen) 
-      writer.add_scalar("KLD/train", KLD.item(), num_batches_seen) 
-      writer.add_scalar("MuDiv/train", mu_err.item(), num_batches_seen) 
-      writer.add_scalar("VarDiv/train", logvar_err.item(), num_batches_seen) 
-      writer.add_scalar("NLL/train", NLL.item(), num_batches_seen) 
-      writer.add_scalar("beta", tmp_beta, num_batches_seen) 
-      writer.add_scalar("gamma", tmp_gamma, num_batches_seen) 
-
-  print('====> Epoch: {}'.format(epoch))
-  return num_batches_seen
-
-if __name__ == '__main__':
-    print("Starting training. Logging to %s" % logdir)
-    num_batches_seen = 0
-    for epoch in range(1, args.epochs + 1):
-        num_batches_seen = train(epoch, num_batches_seen)
-    full_save_model_dir = modelDir + "/cache_batch_no%d" % num_batches_seen
-    print("Saving full model info to %s" % full_save_model_dir)
-    save_conv_vae(model, full_save_model_dir)
-    print("Saving trained model to %s" % modelDir)
-    pyu.export_model(RepresentationExtractor(model),
-            path=modelDir + "/pytorch_model.pt",
-            input_shape=(1, im_channels, 64, 64))
+print("Starting training. Logging to %s" % logdir)
+num_batches_seen = 0
+for epoch in range(1, args.epochs + 1):
+    trainer.train()
+    print('====> Epoch: {}'.format(epoch))
+full_save_model_dir = modelDir + "/cache_batch_no%d" % num_batches_seen
+print("Saving full model info to %s" % full_save_model_dir)
+save_conv_vae(model, full_save_model_dir)
+print("Saving trained model to %s" % modelDir)
+pyu.export_model(RepresentationExtractor(model),
+        path=modelDir + "/pytorch_model.pt",
+        input_shape=(1, im_channels, 64, 64))

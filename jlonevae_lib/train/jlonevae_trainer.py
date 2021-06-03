@@ -13,53 +13,57 @@ import torch.utils.tensorboard
 import os
 import numpy as np
 from jlonevae_lib.architecture.save_model import save_conv_vae
+import jlonevae_lib.architecture.vae_jacobian as vj
 from jlonevae_lib.train.loss_function import vae_loss_function 
-import jlonevae_lib.train.vae_jacobian as vj
 
-#https://stackoverflow.com/questions/47714643/pytorch-data-loader-multiple-iterations
-def cycle(iterable):
-    while True:
-        for x in iterable:
-            yield x
+class JLOneVAETrainer(object):
+    def __init__(self, model, data_loader, beta, gamma, device, 
+        log_dir, lr, annealingBatches, record_loss_every=100):
+      self.model = model
+      self.data_loader = data_loader
+      self.optimizer= torch.optim.Adam(self.model.parameters(), lr=lr)
+      self.device = device
+      self.log_dir = log_dir
+      self.writer = torch.utils.tensorboard.SummaryWriter(log_dir=self.log_dir)
+      self.num_batches_seen = 0
+      self.annealingBatches = annealingBatches
+      self.record_loss_every = record_loss_every
 
-class StandaloneTrainer(object):
-    def __init__(self, model, dataset, batch_size=64, device="cpu", log_dir="./runs/", lr = 0.001):
-        self.model = model
-        self.data_loader = torch.utils.data.DataLoader(dataset,batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
-        #https://stackoverflow.com/questions/47714643/pytorch-data-loader-multiple-iterations
-        self.data_iterator = iter(cycle(self.data_loader))
-        self.optimizer= torch.optim.Adam(self.model.parameters(), lr=lr)
-        self.device = device
-        self.log_dir = log_dir
-        self.writer = torch.utils.tensorboard.SummaryWriter(log_dir=self.log_dir)
-        self.num_batches_seen = 0
+    def train(self):
+      # set model to "training mode"
+      self.model.train()
 
-    def train(self, beta=1.0, gamma=0.0, record_loss_every=100, save_model_every=10000):
-        # set model to "training mode"
-        self.model.train()
-
-        # get chunk of data 
-        data =  next(self.data_iterator)
+      # for each chunk of data in an epoch
+      for data in self.data_loader:
+        # do annealing and store annealed value to tmp value
+        if self.num_batches_seen < self.annealingBatches:
+          tmp_beta = self.beta * self.num_batches_seen / self.annealingBatches
+          tmp_gamma = self.gamma * self.num_batches_seen / self.annealingBatches
+        else:
+          tmp_beta = self.beta
+          tmp_gamma = self.gamma
 
         # move data to device, initialize optimizer, model data, compute loss,
         # and perform one optimizer step
         data = data.to(self.device)
         self.optimizer.zero_grad()
         recon_batch, mu, logvar, noisy_mu = self.model(data)
-        loss, NegLogLikelihood, KLD, mu_error, logvar_error, noiselessNegLogLikelihood = vae_loss_function(recon_batch, data, mu, logvar, beta)
+        loss, NegLogLikelihood, KLD, mu_error, logvar_error,
+        noiselessNegLogLikelihood = vae_loss_function(recon_batch, data, mu,
+            logvar, tmp_beta)
 
         # short-circuit calc if gamma is 0 (no JL1-VAE loss)
-        if gamma == 0:
+        if tmp_gamma == 0:
             ICA_loss = torch.tensor(0)
         else:
             ICA_loss = vj.jacobian_loss_function(self.model, noisy_mu, logvar, self.device, scaling = self.scaling)
-        loss += gamma * ICA_loss
+        loss += tmp_gamma * ICA_loss
         loss.backward()
         self.optimizer.step()
 
         # log to tensorboard
         self.num_batches_seen += 1
-        if self.num_batches_seen % record_loss_every == 0:
+        if self.num_batches_seen % self.record_loss_every == 0:
             self.writer.add_scalar("ICALoss/train", ICA_loss.item(), self.num_batches_seen) 
 
             self.writer.add_scalar("ELBO/train", loss.item(), self.num_batches_seen) 
@@ -67,8 +71,5 @@ class StandaloneTrainer(object):
             self.writer.add_scalar("MuDiv/train", mu_error.item(), self.num_batches_seen) 
             self.writer.add_scalar("VarDiv/train", logvar_error.item(), self.num_batches_seen) 
             self.writer.add_scalar("NLL/train", NegLogLikelihood.item(), self.num_batches_seen) 
-            self.writer.add_scalar("beta", beta, self.num_batches_seen) 
-            self.writer.add_scalar("gamma", gamma, self.num_batches_seen) 
-        # save a cached version of this model
-        if self.num_batches_seen % save_model_every == 0:
-            save_conv_vae(self.model, os.path.join(self.log_dir, "cache_batch_no%d" % self.num_batches_seen))
+            self.writer.add_scalar("beta", tmp_beta, self.num_batches_seen) 
+            self.writer.add_scalar("gamma", tmp_gamma, self.num_batches_seen) 

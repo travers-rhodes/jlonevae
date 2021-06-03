@@ -2,8 +2,6 @@
 # without using disentanglement_lib, you can do so by using this file.
 # For our paper, this is the implementation we use for the naturalImage results
 # for which we do not have ground-truth factors of variation.
-
-import numpy as np
 import datetime
 import glob
 
@@ -37,8 +35,8 @@ parser.add_argument('--gamma', default=[0.000], type=float, nargs="*",
         help='one or more gamma values to use in training')
 parser.add_argument('--latentDim', default=[10], type=int, nargs="*",
         help='number of latent dimensions to use')
-parser.add_argument('--betaAnnealingBatches', default=0, type=int,
-        help='number of batches for which to perform linear beta annealing (starting at 0, ramping up to set beta)')
+parser.add_argument('--annealingBatches', default=0, type=int,
+        help='number of batches for which to perform linear annealing (starting at 0, ramping up to set value)')
 args = parser.parse_args()
 
 dataset_name = args.experimentName
@@ -54,7 +52,7 @@ gammaVals = args.gamma
 latentDimVals = args.latentDim
 # ...how often we log loss to tensorboard
 record_loss_every = args.recordLossEvery
-betaAnnealingBatches = args.betaAnnealingBatches
+annealingBatches = args.annealingBatches
 
 
 train_data_paths = glob.glob("data/%s/train/*.npz" % dataset_name)
@@ -120,19 +118,17 @@ for run_beta in betaVals:
               batch_size, 
               lr_string,
               "_d" if useDoublePrecision else "",
-              "_anneal%d" % betaAnnealingBatches if betaAnnealingBatches != 0 else "", 
+              "_anneal%d" % annealingBatches if annealingBatches != 0 else "", 
               runId)
-      print(datetime.datetime.now())
       print("starting " + new_experiment_name)
       modelDir = "trainedModels/%s/%s/%s/" % (dataset_name, experimentName, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-      trainer = StandaloneTrainer(model, dataset, batch_size=batch_size,
-          device=device, log_dir=modelDir, lr = lr)
-      for i in range(num_batches):
-          if i < betaAnnealingBatches:
-            beta = run_beta * i / betaAnnealingBatches
-            gamma = ica_factor * i / betaAnnealingBatches
-          else:
-            beta = run_beta
-            gamma = ica_factor 
-          trainer.train(record_loss_every=record_loss_every,
-              save_model_every=save_model_every, beta = beta, gamma=gamma)
+      data_loader = torch.utils.data.DataLoader(dataset,batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
+      trainer = JLOneVAETrainer(model, data_loader,
+          device=device, log_dir=modelDir, lr = lr,
+          annealingBatches=annealingBatches)
+      num_epochs = int(ceil(num_batches/len(dataset)))
+      for i in range(num_epochs):
+        trainer.train(record_loss_every=record_loss_every)
+      # save a cached version of this model
+      save_conv_vae(trainer.model, os.path.join(trainer.log_dir,
+        "cache_batch_no%d" % trainer.num_batches_seen))
