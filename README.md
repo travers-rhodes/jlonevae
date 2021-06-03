@@ -39,9 +39,7 @@ To train the mpi3d-multi models in the paper,
 download [`mpi3d_real`](https://github.com/rr-learning/disentanglement_dataset) (12 gigabytes, so takes a while to download) by running
 ```download
 cd data
-conda actviate jlonevae
 ./download_mpi3d_real.sh
-./sampleNatualImagePatches.py
 cd ..
 ```
 and then run
@@ -57,7 +55,9 @@ To train the naturalImage models in the paper, first download the data from
 [Bruno Olshausen's website](http://www.rctn.org/bruno/sparsenet/) by running
 ```train
 cd data
-source download_natural_image_data.sh
+conda actviate jlonevae
+./download_natural_image_data.sh
+./sampleNatualImagePatches.py
 cd ..
 
 ```
