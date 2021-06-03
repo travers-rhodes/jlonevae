@@ -55,7 +55,7 @@ To train the naturalImage models in the paper, first download the data from
 [Bruno Olshausen's website](http://www.rctn.org/bruno/sparsenet/) by running
 ```train
 cd data
-conda actviate jlonevae
+conda activate jlonevae
 ./download_natural_image_data.sh
 ./sampleNatualImagePatches.py
 cd ..
