@@ -10,13 +10,13 @@ This repository is the official implementation of Local Disentanglement in Varia
 To install requirements for a CUDA-enabled workstation (strongly recommended):
 ```setup
 conda env create -f environment.yml
-conda bash init
+conda init bash
 ```
 
 To install requirements without GPU support:
 ```setup
 conda env create -f environment_nogpu.yml
-conda bash init
+conda init bash
 ```
 
 ## Training
