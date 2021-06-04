@@ -11,3 +11,7 @@ experimentScripts/visualizations/latentJacobianImages
 experimentScripts/visualizations/*.png
 experimentScripts/visualizations/*/*.png
 experimentScripts/visualizations/*/*/*.png
+*.zip
+naturalImageDownload/
+standardModelsDownload/
+threeDotsDownload/
