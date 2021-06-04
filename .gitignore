@@ -10,3 +10,4 @@ __pycache__
 experimentScripts/visualizations/latentJacobianImages
 experimentScripts/visualizations/*.png
 experimentScripts/visualizations/*/*.png
+experimentScripts/visualizations/*/*/*.png
