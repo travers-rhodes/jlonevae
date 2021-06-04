@@ -42,6 +42,15 @@ Training logs are written to the `./logs` directory and the trained model is
 written to a subdirectory of `./trainedModels` (both as a PyTorch JIT module for use with
 [`disentanglement_lib`](https://github.com/google-research/disentanglement_lib) and also using `torch.save(model.state_dict(), ...)`).
 
+Baseline models, for comparison, are trained by calling
+```
+./experimentScripts/train_baseline/train_standard_tf_models.bash
+```
+Those models and logs are stored to a subdirectory of the `trainedStandardModels` folder and the model
+numbers identify which configuration was used from
+[disentanglement_lib](https://github.com/google-research/disentanglement_lib#reproducing-prior-experiments),
+now trained on the three-dots dataset.
+
 #### MPI3D-Multi
 To train the mpi3d-multi models in the paper,
 download [`mpi3d_real`](https://github.com/rr-learning/disentanglement_dataset) (12 gigabytes, so takes a while to download) by running
@@ -76,30 +85,60 @@ Then, run
 ```
 
 ## Evaluation
+
+### Qualtiative 
 To evaluate the models qualitatively, from the base directory start a jupyter
 notebook by running
 ```jupyter
 conda activate jlonevae
 jupyter notebook
 ```
-Then, open the notebook at 
-`experimentScripts/visualizations/ExampleJacobianValues_ThreeDots.ipynb`
-or
-`experimentScripts/visualizations/ExampleJacobianValues-Mpi3d-multi.ipynb`
-to view jacobian column values for trained models.
+Then, within the folder `experimentScripts/visualizations`, open any of the
+following Jupyter notebooks to view the associated Jacobian columns:
+```
+ExampleJacobianValues_ThreeDots.ipynb
+ExampleJacobianValues-Mpi3d-multi.ipynb
+```
 
+For natural image data, you can create Jacobian embeddings for a sequence of
+nearby image crops by running
+```
+./experimentScripts/visualizations/createLatentJacobianImages_naturalImages.bash
+```
+
+### Quantitative
 To evaluate the three-dots models quantitatively, run
 ```eval
 ./experimentScripts/evaluate_jlonevae/evaluate_threeDots.bash
 ```
+You can safely ignore the error `ERROR:root:Path not found: local_mig_base.gin`.
+
+To evaluate the baseline models quantitatively, run
+```eval
+./experimentScripts/evaluate_baseline/postprocess_baseline_threeDots.bash
+./experimentScripts/evaluate_baseline/evaluate_baseline.bash
+```
+You can safely ignore the error `ERROR:root:Path not found: local_mig_base.gin`.
+
+To visualize the quantitative evaluations, from the base directory run
+```jupyter
+conda activate jlonevae
+jupyter notebook
+```
+Then, within the folder `experimentScripts/visualizations`, open any of the
+following Jupyter notebooks to generate comparison plots:
+```
+LocalDisentanglementComparedToBaseline.ipynb  
+ScatterplotMIGandModularity_VaryingRho.ipynb
+```
 
 ## Pre-trained Models
 
-You can download pretrained models here:
-
-- [My awesome model](https://drive.google.com/mymodel.pth) trained on ImageNet using parameters x,y,z. 
-
->📋  Give a link to where/how the pretrained models can be downloaded and how they were trained (if applicable).  Alternatively you can have an additional column in your results table with a link to the models.
+Pretrained JL1-VAE and &beta;-VAE models for natural images, three-dots, and
+MPI3D-Multi are available [here (external link)](https://drive.google.com/drive/folders/1ac_YjhqWvakTUyHev76iuZcVfuCV76CM?usp=sharing)
+Baseline models (&beta;-VAE, FactorVAE, DIP-VAE-I, DIP-VAE-II, &beta;-TCVAE,
+and AnnealedVAE) trained on three-dots are available [here (external
+link)](https://drive.google.com/drive/folders/1jZJdvp1FhIMmc2s1WTVi9SYi56f5fl_1?usp=sharing)
 
 ## Results
 
@@ -113,4 +152,3 @@ can be found in our paper.
 
 This repository is licensed under the Apache License, Version 2.0. To
 contribute, please create a pull request.
-
