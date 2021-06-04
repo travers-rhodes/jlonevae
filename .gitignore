@@ -9,3 +9,4 @@ __pycache__
 .nfs*
 experimentScripts/visualizations/latentJacobianImages
 experimentScripts/visualizations/*.png
+experimentScripts/visualizations/*/*.png
