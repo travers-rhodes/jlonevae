@@ -91,10 +91,10 @@ def get_full_path(filename):
 _study = unsupervised_study_v1.UnsupervisedStudyV1()
 evaluation_configs = sorted(_study.get_eval_config_files())
 
-#Add local config files from lilvae package
-lilvaeMetricConfigPath=get_full_path("exampleScripts")
-for configFile in os.listdir(lilvaeMetricConfigPath):
-    evaluation_configs.append(get_full_path(os.path.join(lilvaeMetricConfigPath, configFile)))
+#Add local config files from jlonevae package
+jlonevaeMetricConfigPath=get_full_path("exampleScripts")
+for configFile in os.listdir(jlonevaeMetricConfigPath):
+    evaluation_configs.append(get_full_path(os.path.join(jlonevaeMetricConfigPath, configFile)))
 
 # Compute individual metrics
 expected_evaluation_metrics = [

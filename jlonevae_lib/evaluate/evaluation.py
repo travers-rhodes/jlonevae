@@ -91,10 +91,10 @@ def get_full_path(filename):
 _study = unsupervised_study_v1.UnsupervisedStudyV1()
 evaluation_configs = sorted(_study.get_eval_config_files())
 
-#Add local config files from lilvae package
-lilvaeMetricConfigPath=get_full_path("jlonevae_lib/config/metrics_configs")
-for configFile in os.listdir(lilvaeMetricConfigPath):
-    evaluation_configs.append(get_full_path(os.path.join(lilvaeMetricConfigPath, configFile)))
+#Add local config files from jlonevae package
+jlonevaeMetricConfigPath=get_full_path("jlonevae_lib/config/metrics_configs")
+for configFile in os.listdir(jlonevaeMetricConfigPath):
+    evaluation_configs.append(get_full_path(os.path.join(jlonevaeMetricConfigPath, configFile)))
 
 # allow the internal "import 'local_mig_base.gin'" to resolve file name correctly
 # unhelpfully, it still will return an error that it can't find the file (the first place it searches)
