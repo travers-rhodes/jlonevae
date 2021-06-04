@@ -5,23 +5,16 @@
 # in ~./bashrc
 
 # activate conda within this child script
-conda activate lil_disentanglement_challenge
+conda activate jlonevae 
 
-export PYTHONPATH="..:../disentanglement_lib"
-export DISENTANGLEMENT_LIB_DATA="../scratch/dataset"
-export NDC_ROOT=$(realpath "../")
+export PYTHONPATH=".:./disentanglement_lib"
+export DISENTANGLEMENT_LIB_DATA="data"
+export NDC_ROOT=$(realpath "./")
+export TF_FORCE_GPU_ALLOW_GROWTH=true
 echo "root is $NDC_ROOT"
 
 
-#if [ "$#" -ne 2 ]; then
-#  echo "we require the model directory and the dataset name"
-#  exit 1
-#fi
-
 export AICROWD_DATASET_NAME=threeDots
-
-#export metricOutputFolder="combinedStandardOutputs/$AICROWD_DATASET_NAME"
-#mkdir -p $metricOutputFolder
 
 export AICROWD_OUTPUT_PATH="trainedStandardModels"
 for folder in $AICROWD_OUTPUT_PATH/*/*;
@@ -32,6 +25,5 @@ do
   export experimentNameBase=$(echo "$AICROWD_EVALUATION_NAME" | cut -d/ -f1)
   echo "running on $AICROWD_EVALUATION_NAME"
   echo "running $folder"
-  python local_evaluation.py 
-  #break # just for testing 
+  python ./jlonevae_lib/baseline_lib/evaluate/evaluation.py 
 done

@@ -8,3 +8,4 @@ __pycache__
 .ipynb_checkpoints
 .nfs*
 experimentScripts/visualizations/latentJacobianImages
+experimentScripts/visualizations/*.png

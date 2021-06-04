@@ -5,7 +5,7 @@
 # in ~./bashrc
 
 # activate conda within this child script
-conda activate lil_disentanglement_challenge
+conda activate jlonevae 
 
 export PYTHONPATH="./:./disentanglement_lib"
 export DISENTANGLEMENT_LIB_DATA="data"

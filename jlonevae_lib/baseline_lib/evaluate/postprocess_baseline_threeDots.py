@@ -27,7 +27,6 @@ from disentanglement_lib.postprocessing import postprocess
 from disentanglement_lib.utils import aggregate_results
 import tensorflow as tf
 import gin.tf
-import aicrowd_helpers
 
 # 0. Settings
 # ------------------------------------------------------------------------------
@@ -42,14 +41,11 @@ ROOT = os.getenv("NDC_ROOT", ".")
 # ------------------------------------------------------------------------------
 
 
-def get_full_path(filename):
-    return os.path.join(ROOT, "tensorflow", filename)
-
 # Extract the mean representation for both of these models.
 representation_path = os.path.join(experiment_output_path, "representation")
 model_path = os.path.join(experiment_output_path)
 # This contains the settings:
-postprocess_gin = [get_full_path("postprocess.gin")]
+postprocess_gin = [os.path.join(ROOT, "jlonevae_lib","baseline_lib","evaluate","postprocess_threeDots.gin")]
 postprocess.postprocess_with_gin(model_path, representation_path, overwrite,
                                  postprocess_gin)
 

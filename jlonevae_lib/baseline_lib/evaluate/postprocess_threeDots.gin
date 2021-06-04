@@ -14,5 +14,5 @@
 # limitations under the License.
 
 postprocess.postprocess_fn = @mean_representation
-dataset.name="auto"
+dataset.name="threeDots"
 postprocess.random_seed = 0
