@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Modified by Travers Rhodes to add a test for a locally-ok
+# Modified by JLONEVAE_ANONYMOUS_AUTHORS to add a test for a locally-ok
 # globally-bad dataset
 
 """Tests for mig.py."""
@@ -67,7 +67,7 @@ class MIGTest(absltest.TestCase):
         ground_truth_data, representation_function, random_state, None, 3000)
     self.assertBetween(scores["discrete_mig"], 0.0, 0.1)
 
-  # test case added by Travers Rhodes
+  # test case added by JLONEVAE_ANONYMOUS_AUTHORS 
   def test_locally_good_metric(self):
     gin.bind_parameter("discretizer.discretizer_fn", _identity_discretizer)
     gin.bind_parameter("discretizer.num_bins", 10)

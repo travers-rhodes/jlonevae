@@ -43,7 +43,7 @@ parser.add_argument('--log-interval', type=int, default=100, metavar='N',
 parser.add_argument('--beta', type=float, default=1,
                     help='the beta value to train with')
 parser.add_argument('--gamma', type=float, default=1,
-                    help='the gamma value (LIL-VAE hyperparameter) to train with')
+                    help='the gamma value (JL1-VAE hyperparameter) to train with')
 parser.add_argument('--lr', type=float, default=0.001,
                     help='the learning rate to use') 
 parser.add_argument('--latent-dim', type=int, default=10,

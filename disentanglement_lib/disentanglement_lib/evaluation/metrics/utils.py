@@ -1,6 +1,6 @@
 # coding=utf-8
 # Copyright 2018 The DisentanglementLib Authors.  All rights reserved.
-# Copyright 2021 Travers Rhodes.  All rights reserved.
+# Copyright 2021 JLONEVAE_ANONYMOUS_AUTHORS.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file was modified by Travers Rhodes in 2021
+# This file was modified by JLONEVAE_ANONYMOUS_AUTHORS in 2021
 
 """Utility functions that are useful for the different metrics."""
 from __future__ import absolute_import
@@ -180,7 +180,7 @@ def gradient_boosting_classifier():
   return ensemble.GradientBoostingClassifier()
 
 
-# TSR: This method generates a local sample from the factor space.
+# JLONEVAE_ANONYMOUS_AUTHORS: This method generates a local sample from the factor space.
 # It then randomly selects a batch of latent factor values that are "near" to 
 # the latent value given by factor_centroid
 # Inputs:

@@ -1,6 +1,6 @@
 # disentanglement_lib
 
-## This fork of `https://github.com/google-research/disentanglement_lib` has been modified by Travers Rhodes in 2021
+## This fork of `https://github.com/google-research/disentanglement_lib` has been modified by `JLONEVAE_ANONYMOUS_AUTHORS` in 2021
 
 ![Sample visualization](https://github.com/google-research/disentanglement_lib/blob/master/sample.gif?raw=true)
 
