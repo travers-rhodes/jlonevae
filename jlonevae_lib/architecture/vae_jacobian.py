@@ -6,7 +6,6 @@ import math
 import os
 from opt_einsum import contract
 
-
 def compute_generator_jacobian_image_optimized(model, embedding, epsilon_scale = 0.001, device="cpu"):
     raw_jacobian = compute_generator_jacobian_optimized(model, embedding, epsilon_scale, device)
     # shape is (latent_size, batch_size, numchannels = 1, im_size, im_size)
@@ -114,3 +113,55 @@ def jacobian_loss_function(model, mu, logvar, device):
     loss = torch.sum(torch.abs(jacobian))/batch_size
     assert len(loss.shape)==0, "loss should be a scalar"
     return(loss)
+
+
+# assume VAE embedding functin has output of embedding numpy array
+# -----which has shape (batch_size, latent_dim)
+# and input shape (batch_size, imchannels, imsidelen(row), imsidelen(col))
+def compute_embedding_jacobian_analytic(model, 
+                                        image,
+                                        device="cpu",
+                                        latent_dim=10,
+                                        jac_batch_size=128):
+    batch_size = image.shape[0]
+    assert batch_size == 1, "for now assert batch size one"
+    im_channels = image.shape[1]
+    im_side_len = image.shape[2]
+    assert im_side_len == image.shape[3], "image should be square"
+    imsize = im_side_len
+    image_rep = torch.tensor(
+            image.repeat(latent_dim,1,1,1)\
+                     .detach().cpu().numpy(), 
+            requires_grad=True, 
+            device=device)
+    
+ 
+    total_rows = latent_dim
+    #want_to_increase_these.shape
+    gradvec = torch.zeros((total_rows, latent_dim)).to(device)
+    for ind in range(latent_dim):
+        gradvec[ind, ind] = 1
+                
+    #print("set ones:", np.where(gradvec.detach().cpu().numpy() == 1))
+                
+    image_rep_splits = image_rep.split(jac_batch_size)
+    gradvec_splits = gradvec.split(jac_batch_size)
+    jac_num_batches = len(gradvec_splits)
+    startInd = 0
+    jacobians_array = []
+    for splitInd in range(jac_num_batches):
+        image_rep_split = image_rep_splits[splitInd].detach()
+        image_rep_split.requires_grad = True
+        #print("ers shape", encoding_rep_split.shape)
+        mu, logvar = model.encode(image_rep_split)
+
+        mu.backward(gradvec_splits[splitInd])
+        jacobians = image_rep_split.grad.detach()\
+                    .cpu()\
+                    .numpy()
+        #print("jacshape:", jacobians.shape)
+        jacobians_array.append(jacobians)
+    jacobians_array = np.concatenate(jacobians_array,axis=0)
+    #maybe i don't need to reshape, output now latent_dim/image_shape
+    jacobians_array_reshaped = jacobians_array
+    return(jacobians_array_reshaped)
