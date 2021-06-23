@@ -15,3 +15,5 @@ experimentScripts/visualizations/*/*/*.png
 naturalImageDownload/
 standardModelsDownload/
 threeDotsDownload/
+scratchwork/TinyICAData/trainedModels
+scratchwork/TinyICAData/icaData.npz

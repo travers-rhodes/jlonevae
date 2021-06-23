@@ -17,12 +17,14 @@ import jlonevae_lib.architecture.vae_jacobian as vj
 from jlonevae_lib.train.loss_function import vae_loss_function 
 
 class JLOneVAETrainer(object):
-    def __init__(self, model, data_loader, beta, gamma, device, 
-        log_dir, lr, annealingBatches, record_loss_every=100):
+    def __init__(self, model, data_loader, beta, gamma, emb_gamma, device, 
+        log_dir, lr, annealingBatches, record_loss_every=100,
+        loss_function_name="bernoulli"):
       self.model = model
       self.data_loader = data_loader
       self.beta = beta
       self.gamma = gamma
+      self.emb_gamma = emb_gamma
       self.optimizer= torch.optim.Adam(self.model.parameters(), lr=lr)
       self.device = device
       self.log_dir = log_dir
@@ -30,6 +32,7 @@ class JLOneVAETrainer(object):
       self.num_batches_seen = 0
       self.annealingBatches = annealingBatches
       self.record_loss_every = record_loss_every
+      self.loss_function_name = loss_function_name
 
     def train(self):
       # set model to "training mode"
@@ -41,9 +44,11 @@ class JLOneVAETrainer(object):
         if self.num_batches_seen < self.annealingBatches:
           tmp_beta = self.beta * self.num_batches_seen / self.annealingBatches
           tmp_gamma = self.gamma * self.num_batches_seen / self.annealingBatches
+          tmp_emb_gamma = self.emb_gamma * self.num_batches_seen / self.annealingBatches
         else:
           tmp_beta = self.beta
           tmp_gamma = self.gamma
+          tmp_emb_gamma = self.emb_gamma
 
         # move data to device, initialize optimizer, model data, compute loss,
         # and perform one optimizer step
@@ -51,14 +56,18 @@ class JLOneVAETrainer(object):
         self.optimizer.zero_grad()
         recon_batch, mu, logvar, noisy_mu = self.model(data)
         loss, NegLogLikelihood, KLD, mu_error, logvar_error = vae_loss_function(recon_batch, 
-                                      data, mu, logvar, tmp_beta)
+                                      data, mu, logvar, tmp_beta, self.loss_function_name)
 
         # short-circuit calc if gamma is 0 (no JL1-VAE loss)
         if tmp_gamma == 0:
             ICA_loss = torch.tensor(0)
         else:
             ICA_loss = vj.jacobian_loss_function(self.model, noisy_mu, logvar, self.device)
-        loss += tmp_gamma * ICA_loss
+        if tmp_emb_gamma == 0:
+            emb_ICA_loss = torch.tensor(0)
+        else:
+            emb_ICA_loss = vj.embedding_jacobian_loss_function(self.model, data, self.device)
+        loss += tmp_gamma * ICA_loss + tmp_emb_gamma * emb_ICA_loss
         loss.backward()
         self.optimizer.step()
 
@@ -66,6 +75,7 @@ class JLOneVAETrainer(object):
         self.num_batches_seen += 1
         if self.num_batches_seen % self.record_loss_every == 0:
             self.writer.add_scalar("ICALoss/train", ICA_loss.item(), self.num_batches_seen) 
+            self.writer.add_scalar("EmbICALoss/train", emb_ICA_loss.item(), self.num_batches_seen) 
 
             self.writer.add_scalar("ELBO/train", loss.item(), self.num_batches_seen) 
             self.writer.add_scalar("KLD/train", KLD.item(), self.num_batches_seen) 

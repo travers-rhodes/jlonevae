@@ -40,9 +40,11 @@ class ConvVAE(VAE):
             gen_first_im_side_len=4,
             gen_conv_layers_channels = [192, 128, 128, 64,3], 
             gen_conv_layers_strides = [2,2,1,2,2], 
-            gen_conv_layers_kernel_sizes = [4,4,4,4,4]):
+            gen_conv_layers_kernel_sizes = [4,4,4,4,4],
+	    final_activation="sigmoid"):
         super(ConvVAE, self).__init__()
         self.architecture="conv_vae"
+        self.final_activation=final_activation
         self.latent_dim = latent_dim
         self.im_side_len = int(im_side_len)
         self.im_channels = im_channels
@@ -171,5 +173,11 @@ class ConvVAE(VAE):
             # match tensorflow's padding="SAME"
             if self.gen_conv_crops[i] is not None:
                 layer = self.gen_conv_crops[i](layer)
-        g = torch.sigmoid(layer)
+        if self.final_activation=="sigmoid":
+          g = torch.sigmoid(layer)
+        elif self.final_activation=="linear":
+          g = layer
+        else:
+          raise RuntimeError(f"unknown final_activation {self.final_activation}")
+
         return(g)

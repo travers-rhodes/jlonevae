@@ -3,7 +3,7 @@ import torch
 TESTING=False # Set to True to run a bunch of extra asserts
 
 # Reconstruction + KL divergence losses summed over all pixels and batch
-def vae_loss_function(recon_x, x, mu, logvar, beta):
+def vae_loss_function(recon_x, x, mu, logvar, beta, loss_function_name="bernoulli"):
     # To make the units work properly, this should be equal to
     # the log reconstruction probability, which is
     # log[N(x, F(z), sigma^2_Recon (assume to be 1 for simplicity))]
@@ -18,8 +18,13 @@ def vae_loss_function(recon_x, x, mu, logvar, beta):
         assert logvar.shape[0] == batch_size, "logvar should have batch_size as first dimension"
 
     noiselessLogLikelihood = torch.tensor(0)
-    # recon_x is of shape batchsize x im_channels x im_side_len x im_side_len
-    LogLikelihood = - torch.nn.functional.binary_cross_entropy(recon_x, x, reduction='sum')/batch_size
+    if loss_function_name=="bernoulli":
+      # recon_x is of shape batchsize x im_channels x im_side_len x im_side_len
+      LogLikelihood = - torch.nn.functional.binary_cross_entropy(recon_x, x, reduction='sum')/batch_size
+    elif loss_function_name=="gaussian":
+      LogLikelihood = - 0.5 * torch.nn.functional.mse_loss(recon_x, x, reduction='sum')/batch_size
+    else:
+      raise RuntimeError(f"unkonwn loss function name {loss_function_name}")
 
     if TESTING:
         assert len(LogLikelihood.shape)==0, "LogLikelihood should be scalar"

@@ -15,7 +15,8 @@ def save_conv_vae(convvae, model_folder_path):
               "gen_first_im_side_len": convvae.gen_first_im_side_len,
               "gen_conv_layers_channels": convvae.gen_conv_layers_channels,
               "gen_conv_layers_strides": convvae.gen_conv_layers_strides,
-              "gen_conv_layers_kernel_sizes": convvae.gen_conv_layers_kernel_sizes
+              "gen_conv_layers_kernel_sizes": convvae.gen_conv_layers_kernel_sizes,
+              "final_activation": convvae.final_activation
              }
     if not os.path.exists(model_folder_path):
         os.makedirs(model_folder_path)
