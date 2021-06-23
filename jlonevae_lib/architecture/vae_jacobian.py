@@ -169,7 +169,7 @@ def compute_embedding_jacobian_analytic(model,
     gradvec_splits = gradvec.split(jac_batch_size)
     jac_num_batches = len(gradvec_splits)
     startInd = 0
-    jacobians_array = torch.empty((0,im_channels, im_side_len, im_side_len))
+    jacobians_array = torch.empty((0,im_channels, im_side_len, im_side_len), device=device)
     for splitInd in range(jac_num_batches):
         image_rep_split = image_rep_splits[splitInd].detach()
         image_rep_split.requires_grad = True

@@ -51,9 +51,12 @@ parser.add_argument('--beta', type=float,
                     help='beta')
 parser.add_argument('--gamma', type=float, 
                     help='gamma')
+parser.add_argument('--embGamma', type=float, 
+                    help='gamma')
 args = parser.parse_args()
 run_beta = args.beta
 run_gamma = args.gamma
+run_emb_gamma = args.embGamma
 
 model = ConvVAE(
          latent_dim = latent_dim,
@@ -81,12 +84,14 @@ print(pytorch_total_params)
 
 betastring = ("%.3f"%run_beta).replace(".","_")
 gammastring = ("%0.3f"%run_gamma).replace(".","_")
-modelinfo = "beta%s_ica%s" % (betastring, gammastring)
+embgammastring = ("%0.3f"%run_emb_gamma).replace(".","_")
+modelinfo = "beta%s_gamma%s_embgamma%s" % (betastring, gammastring, embgammastring)
 modelDir = "trainedModels/%s/%s" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), 
                                     modelinfo) 
 data_loader = torch.utils.data.DataLoader(dataset.astype(np.float32),batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
 trainer = JLOneVAETrainer(model, data_loader,
   beta=run_beta, gamma=run_gamma,
+  emb_gamma=run_emb_gamma,
   device=device, log_dir=modelDir, lr = lr,
   annealingBatches=annealingBatches,
   loss_function_name="gaussian")
