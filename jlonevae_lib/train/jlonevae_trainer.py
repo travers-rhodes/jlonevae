@@ -68,6 +68,10 @@ class JLOneVAETrainer(object):
         else:
             emb_ICA_loss = vj.embedding_jacobian_loss_function(self.model, data, self.device)
         loss += tmp_gamma * ICA_loss + tmp_emb_gamma * emb_ICA_loss
+        # for safety, zero grad before continuing calculation
+        # (really, embedding_jacobian_loss_function ought to clear the
+        # grads after it's done playing with them, but that's a different story)
+        self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 

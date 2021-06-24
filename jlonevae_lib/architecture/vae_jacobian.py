@@ -118,7 +118,7 @@ def jacobian_loss_function(model, mu, logvar, device):
     assert len(loss.shape)==0, "loss should be a scalar"
     return(loss)
 
-def embedding_jacobian_loss_function(model, images, device):
+def embedding_jacobian_loss_function(model, images, device, jac_batch_size=128):
     latent_dim = model.latent_dim
     batch_size = images.shape[0]
     #jac output latent_dim x image_shape
@@ -126,7 +126,7 @@ def embedding_jacobian_loss_function(model, images, device):
     jacobian = compute_embedding_jacobian_analytic(model, 
                 images, 
                 device=device, 
-                jac_batch_size=128)
+                jac_batch_size=jac_batch_size)
     loss = torch.sum(torch.abs(jacobian))/batch_size
     assert len(loss.shape)==0, "loss should be a scalar"
     return(loss)
