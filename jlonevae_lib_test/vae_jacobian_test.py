@@ -2,9 +2,7 @@ import unittest
 import numpy as np
 import torch
 from jlonevae_lib.architecture.vae import ConvVAE
-from jlonevae_lib.architecture.vae_jacobian import compute_embedding_jacobian_analytic, \
-         embedding_jacobian_loss_function, compute_generator_jacobian_optimized, \
-         compute_generator_jacobian_analytic
+from jlonevae_lib.architecture.vae_jacobian import *
 
 if torch.cuda.is_available():
   available_devices = ["cuda", "cpu"]
@@ -67,6 +65,14 @@ class TestEmbedding(unittest.TestCase):
       for device in available_devices:
         model = get_linear_model(device)
         jacs = compute_embedding_jacobian_analytic(model, images, device, jac_batch_size=1)
+        for jac in jacs:
+          np.testing.assert_almost_equal(jac.detach().cpu().numpy(),np.array([[1,2],[3,4],[5,6]], dtype=np.float32).reshape(3,2,1,1))
+    
+    def test_embedding_jacobian_optimized(self):
+      images = torch.tensor(np.zeros(shape=(10,2,1,1), dtype=np.float32))
+      for device in available_devices:
+        model = get_linear_model(device)
+        jacs = compute_embedding_jacobian_optimized(model, images, device=device, epsilon_scale=1)
         for jac in jacs:
           np.testing.assert_almost_equal(jac.detach().cpu().numpy(),np.array([[1,2],[3,4],[5,6]], dtype=np.float32).reshape(3,2,1,1))
 

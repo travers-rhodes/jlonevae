@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import sys
@@ -84,7 +83,7 @@ print(pytorch_total_params)
 
 betastring = ("%.3f"%run_beta).replace(".","_")
 gammastring = ("%0.3f"%run_gamma).replace(".","_")
-embgammastring = ("%0.3f"%run_emb_gamma).replace(".","_")
+embgammastring = ("%0.9f"%run_emb_gamma).replace(".","_")
 modelinfo = "beta%s_gamma%s_embgamma%s" % (betastring, gammastring, embgammastring)
 modelDir = "trainedModels/%s/%s" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), 
                                     modelinfo) 

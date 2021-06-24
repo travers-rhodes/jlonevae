@@ -73,6 +73,9 @@ class JLOneVAETrainer(object):
 
         # log to tensorboard
         self.num_batches_seen += 1
+        if self.num_batches_seen == 1:
+          self.writer.add_graph(self.model, data)
+          self.writer.flush()
         if self.num_batches_seen % self.record_loss_every == 0:
             self.writer.add_scalar("ICALoss/train", ICA_loss.item(), self.num_batches_seen) 
             self.writer.add_scalar("EmbICALoss/train", emb_ICA_loss.item(), self.num_batches_seen) 
@@ -84,3 +87,4 @@ class JLOneVAETrainer(object):
             self.writer.add_scalar("NLL/train", NegLogLikelihood.item(), self.num_batches_seen) 
             self.writer.add_scalar("beta", tmp_beta, self.num_batches_seen) 
             self.writer.add_scalar("gamma", tmp_gamma, self.num_batches_seen) 
+            self.writer.add_scalar("emb_gamma", tmp_emb_gamma, self.num_batches_seen) 

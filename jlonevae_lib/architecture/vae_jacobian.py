@@ -123,23 +123,19 @@ def embedding_jacobian_loss_function(model, images, device):
     batch_size = images.shape[0]
     #jac output latent_dim x image_shape
     loss = None
-    for image in images: 
-      image = image[np.newaxis,...]
-      jacobian = compute_embedding_jacobian_analytic(model, 
-                  image, 
-                  device=device, 
-                  jac_batch_size=128)
-      if loss is None:
-        loss = torch.sum(torch.abs(jacobian))
-      else:
-        loss += torch.sum(torch.abs(jacobian))
+    jacobian = compute_embedding_jacobian_analytic(model, 
+                images, 
+                device=device, 
+                jac_batch_size=128)
+    loss = torch.sum(torch.abs(jacobian))/batch_size
     assert len(loss.shape)==0, "loss should be a scalar"
-    return(loss/batch_size)
+    return(loss)
 
 
 # assume VAE embedding functin has output of embedding numpy array
 # -----which has shape (batch_size, latent_dim)
 # and input shape (batch_size, imchannels, imsidelen(row), imsidelen(col))
+# RETURNS: jacobian matrix with shape batch_size, latent_dim, im_channels, im_side_len, im_side_len
 def compute_embedding_jacobian_analytic(model, 
                                         images,
                                         device="cpu",
@@ -175,11 +171,55 @@ def compute_embedding_jacobian_analytic(model,
         image_rep_split.requires_grad = True
         #print("ers shape", encoding_rep_split.shape)
         mu, logvar = model.encode(image_rep_split)
-
-        mu.backward(gradvec_splits[splitInd])
+        # I feel like you should always call zero_grad before backward
+        model.zero_grad()
+        # by creating the graph we allow subsequent backward on grad
+        mu.backward(gradvec_splits[splitInd], create_graph=True)
         jacobians = image_rep_split.grad
         jacobians_array = torch.cat((jacobians_array,jacobians), dim=0)
     if TESTING:
      np.testing.assert_almost_equal(jacobians_array.shape, (total_rows, im_channels, im_side_len, im_side_len))
     jacobians_array_reshaped = jacobians_array.reshape(batch_size, latent_dim, im_channels, im_side_len, im_side_len)
     return(jacobians_array_reshaped)
+
+# RETURNS: jacobian matrix with shape batch_size, latent_dim, im_channels, im_side_len, im_side_len
+def compute_embedding_jacobian_optimized(model, images, epsilon_scale = 0.001, device="cpu"):
+    batch_size = images.shape[0]
+    im_channels = images.shape[1]
+    imsize = images.shape[2]
+    assert imsize == images.shape[3], "image should be square"
+    latent_dim = model.latent_dim
+
+    total_rows = im_channels * imsize * imsize
+    # torch's repeat "tiles" like ABCABCABC (not AAABBBCCC)
+    # note that we detach the embedding here, so we should hopefully
+    # not be pulling our gradients further back than we intend
+    images_rep = images.repeat(total_rows+1,1,1,1).detach().clone().to(device)
+    
+    delta = torch.zeros((total_rows+1, im_channels, imsize, imsize)).to(device)
+    for row in range(imsize):
+        #if row != 2: 
+        #    continue #debugging. only update row 2
+        for col in range(imsize):
+            #if col != 1:
+            #    continue #debugging. only update column 1
+            for chan in range(im_channels):
+                #if chan != 0:
+                #    continue #debugging. only update channel 0
+                delta[chan * imsize * imsize + row * imsize + col, chan, row, col] = 1
+    # this is like numpy repeat on first axis (AAABBBCCC)
+    delta = torch.repeat_interleave(delta,batch_size, dim=0)
+    # we randomized this before up to epsilon_scale,
+    # but for now let's simplify and just have this equal to epsilon_scale.
+    # I'd be _very_ impressed if the network can figure out to make the results
+    # periodic with this frequency in order to get around this gradient check.
+    epsilon = epsilon_scale     
+    images_rep += epsilon * delta
+    embs = model.encode(images_rep)[0]
+    temp_calc_shape = [total_rows+1, batch_size] + list(embs.shape[1:])
+    embs = embs.view(temp_calc_shape)
+    embs = (embs[:-1] - embs[-1])/epsilon
+    embs = embs.view(im_channels, imsize, imsize, batch_size, latent_dim)
+    # RETURNS: jacobian matrix with shape batch_size, latent_dim, im_channels, im_side_len, im_side_len
+    embs = embs.permute(3,4,0,1,2) 
+    return(embs)
