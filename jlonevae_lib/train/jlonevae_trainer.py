@@ -19,12 +19,13 @@ from jlonevae_lib.train.loss_function import vae_loss_function
 class JLOneVAETrainer(object):
     def __init__(self, model, data_loader, beta, gamma, emb_gamma, device, 
         log_dir, lr, annealingBatches, record_loss_every=100,
-        loss_function_name="bernoulli"):
+        loss_function_name="bernoulli", emb_regularization="lone"):
       self.model = model
       self.data_loader = data_loader
       self.beta = beta
       self.gamma = gamma
       self.emb_gamma = emb_gamma
+      self.emb_regularization = emb_regularization
       self.optimizer= torch.optim.Adam(self.model.parameters(), lr=lr)
       self.device = device
       self.log_dir = log_dir
@@ -65,8 +66,12 @@ class JLOneVAETrainer(object):
             ICA_loss = vj.jacobian_loss_function(self.model, noisy_mu, logvar, self.device)
         if tmp_emb_gamma == 0:
             emb_ICA_loss = torch.tensor(0)
-        else:
+        elif self.emb_regularization == "lone":
             emb_ICA_loss = vj.embedding_jacobian_loss_function(self.model, data, self.device)
+        elif self.emb_regularization == "twoone":
+            emb_ICA_loss = vj.embedding_jacobian_twoone_loss_function(self.model, data, self.device)
+        else:
+            raise RuntimeError(f"embedding gamma was specified but emb regularization function was '{self.emb_regularization}' which is not valid")
         loss += tmp_gamma * ICA_loss + tmp_emb_gamma * emb_ICA_loss
         # for safety, zero grad before continuing calculation
         # (really, embedding_jacobian_loss_function ought to clear the

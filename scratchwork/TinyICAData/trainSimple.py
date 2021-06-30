@@ -28,21 +28,6 @@ import torch
 import math
 import os
 
-# define our convolutional network parameters
-# see jlonevae_lib.architecture.vae.ConvVAE for how these parameters define the VAE network.
-emb_conv_layers_channels = []
-emb_conv_layers_strides = []
-emb_conv_layers_kernel_sizes = []
-emb_fc_layers_num_features = [10,10,10]
-gen_conv_layers_channels = []
-gen_conv_layers_kernel_sizes = []
-gen_fc_layers_num_features = [2]
-gen_first_im_side_len=1
-gen_conv_layers_strides = []
-im_channels = 2
-im_side_len = 1
-latent_dim=3
-device="cuda"
 
 import argparse
 parser = argparse.ArgumentParser(description='Train tiny vae')
@@ -52,10 +37,35 @@ parser.add_argument('--gamma', type=float,
                     help='gamma')
 parser.add_argument('--embGamma', type=float, 
                     help='gamma')
+parser.add_argument('--embRegularization', type=str, 
+                    help='embedding regularization function name. lone or twoone')
+parser.add_argument('--modelSize', type=str, 
+                    help='"big" or "linear"')
 args = parser.parse_args()
 run_beta = args.beta
 run_gamma = args.gamma
 run_emb_gamma = args.embGamma
+emb_regularization = args.embRegularization
+model_size=args.modelSize
+
+# define our convolutional network parameters
+# see jlonevae_lib.architecture.vae.ConvVAE for how these parameters define the VAE network.
+emb_conv_layers_channels = []
+emb_conv_layers_strides = []
+emb_conv_layers_kernel_sizes = []
+emb_fc_layers_num_features = [10,10,10]
+gen_conv_layers_channels = []
+gen_conv_layers_kernel_sizes = []
+if model_size == "big":
+  gen_fc_layers_num_features = [10,10,10,2]
+elif model_size == "linear":
+  gen_fc_layers_num_features = [2]
+gen_first_im_side_len=1
+gen_conv_layers_strides = []
+im_channels = 2
+im_side_len = 1
+latent_dim=3
+device="cuda"
 
 model = ConvVAE(
          latent_dim = latent_dim,
@@ -83,9 +93,9 @@ print(pytorch_total_params)
 
 betastring = ("%.3f"%run_beta).replace(".","_")
 gammastring = ("%0.3f"%run_gamma).replace(".","_")
-embgammastring = ("%0.9f"%run_emb_gamma).replace(".","_")
-modelinfo = "beta%s_gamma%s_embgamma%s" % (betastring, gammastring, embgammastring)
-modelDir = "trainedModels/%s/%s" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), 
+embgammastring = ("%0.3f"%run_emb_gamma).replace(".","_")
+modelinfo = f"{model_size}_{emb_regularization}_beta{betastring}_gamma{gammastring}_embgamma{embgammastring}" 
+modelDir = "toyDatasetTrainedModels/%s/%s" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), 
                                     modelinfo) 
 data_loader = torch.utils.data.DataLoader(dataset.astype(np.float32),batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
 trainer = JLOneVAETrainer(model, data_loader,
@@ -93,7 +103,8 @@ trainer = JLOneVAETrainer(model, data_loader,
   emb_gamma=run_emb_gamma,
   device=device, log_dir=modelDir, lr = lr,
   annealingBatches=annealingBatches,
-  loss_function_name="gaussian")
+  loss_function_name="gaussian",
+  emb_regularization = emb_regularization)
 print(len(dataset))
 num_epochs = int(math.ceil(num_batches * batch_size/len(dataset)))
 print(num_epochs)

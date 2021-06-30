@@ -7,13 +7,21 @@
 # activate conda within this child script
 conda activate jlonevae 
 
-for beta in 0.001 0.005 0.01 0.1
+for beta in 0.001 
 do
-  for gamma in 0.01 0.001 0.005
+  for gamma in 0 
   do
-    echo $beta
-    echo $gamma
-    ./trainSimple.py --beta $beta --gamma $gamma
+    for embGamma in 0.001 0.005 0.01 0.1 1.0 10.0
+    do
+      for embRegularization in lone twoone
+      do 
+      echo $beta
+      echo $gamma
+      echo $embGamma
+      echo $embRegularization
+      ./trainSimple.py --beta $beta --gamma $gamma --embGamma $embGamma --embRegularization $embRegularization --modelSize "big"
+      done
+    done       
   done
 done
 

@@ -131,8 +131,24 @@ def embedding_jacobian_loss_function(model, images, device, jac_batch_size=128):
     assert len(loss.shape)==0, "loss should be a scalar"
     return(loss)
 
+def embedding_jacobian_twoone_loss_function(model, images, device, jac_batch_size=128):
+    latent_dim = model.latent_dim
+    batch_size = images.shape[0]
+    loss = None
+    # jacobian matrix has shape batch_size, latent_dim, im_channels, im_side_len, im_side_len
+    jacobian = compute_embedding_jacobian_analytic(model, 
+                images, 
+                device=device, 
+                jac_batch_size=jac_batch_size)
+    # sum over all but batch_size and latent_dim (which are indices 0,1)
+    row_norms = torch.sqrt(jacobian.pow(2).sum((2,3,4)))
+    # take the L1 norm over those row_norms
+    loss = torch.sum(row_norms)/batch_size
+    assert len(loss.shape)==0, "loss should be a scalar"
+    return(loss)
 
-# assume VAE embedding functin has output of embedding numpy array
+
+# assume VAE embedding function has output of embedding numpy array
 # -----which has shape (batch_size, latent_dim)
 # and input shape (batch_size, imchannels, imsidelen(row), imsidelen(col))
 # RETURNS: jacobian matrix with shape batch_size, latent_dim, im_channels, im_side_len, im_side_len

@@ -18,3 +18,4 @@ threeDotsDownload/
 scratchwork/TinyICAData/trainedModels
 scratchwork/TinyICAData/icaData.npz
 scratchwork/TinyICAData/debug_architecture
+scratchwork/TinyICAData/toyDatasetTrainedModels/
