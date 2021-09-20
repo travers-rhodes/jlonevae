@@ -114,3 +114,18 @@ def jacobian_loss_function(model, mu, logvar, device):
     loss = torch.sum(torch.abs(jacobian))/batch_size
     assert len(loss.shape)==0, "loss should be a scalar"
     return(loss)
+
+## This function was added based on reviewer feedback to check the effect of regularizing the L2
+## to various extents (on top of the implicit (weighted) L2 loss that is already part of the VAE
+def jacobian_l2_loss_function(model, mu, logvar, device):
+    # jacobian shape is (latent_dim, batch_size, output_model_shape)
+    # where the first batch_size rows correspond to the first latent dimension, etc.
+    jacobian = compute_generator_jacobian_optimized(model, mu, epsilon_scale = 0.001, device=device)
+    #print(jacobian.shape)
+    latent_dim = jacobian.shape[0]
+    batch_size = jacobian.shape[1]
+    jacobian = jacobian.reshape((latent_dim, batch_size, -1))
+    obs_dim = jacobian.shape[2]
+    loss = torch.sum(torch.square(jacobian))/batch_size
+    assert len(loss.shape)==0, "loss should be a scalar"
+    return(loss)

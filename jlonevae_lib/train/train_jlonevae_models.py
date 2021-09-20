@@ -50,6 +50,8 @@ parser.add_argument('--latent-dim', type=int, default=10,
                     help='the number of latent dimensions to train with')
 parser.add_argument('--annealingBatches', default=0, type=int,
         help='number of batches for which to perform linear annealing (starting at 0, ramping up to beta and gamma values)')
+parser.add_argument('--regularization_type', default="jlone", # string is the default type
+        help='regularization type (either jlone or jltwo)')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -119,11 +121,11 @@ lr = args.lr
 annealingBatches = args.annealingBatches
 
 # name to use for this model
-def getModelName(beta, gamma, latent_dim):
+def getModelName(beta, gamma, latent_dim, regularization_type):
   beta_string = ("%.4f"%beta).replace(".","_")
   ica_factor_name = ("%0.4f"%gamma).replace(".","_")
   pca_factor = None
-  scaling = "lone"
+  scaling = "lone" if regularization_type == "jlone" else regularization_type
   batch_normalize = False
   useAdam = True
   useDoublePrecision = False
@@ -161,7 +163,8 @@ model = ConvVAE(
 record_loss_every = args.log_interval
 beta=args.beta
 gamma=args.gamma
-experimentName = getModelName(beta, gamma, latent_dim)
+regularization_type=args.regularization_type
+experimentName = getModelName(beta, gamma, latent_dim, regularization_type)
 logdir = "logs/%s/%s" % (experimentName, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 modelDir = "trainedModels/%s/%s/representation" % (experimentName, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 Path(logdir).mkdir(parents=True, exist_ok=True)
@@ -169,7 +172,7 @@ Path(modelDir).mkdir(parents=True, exist_ok=True)
 # empty "results" folder here required later for evaluation.py
 Path(modelDir+"/results").mkdir(parents=True, exist_ok=True)
 trainer = JLOneVAETrainer(model, train_loader, beta, gamma, device,
-    logdir, lr, annealingBatches, record_loss_every=100)
+    logdir, lr, annealingBatches, record_loss_every=100, regularization_type=regularization_type)
 
 print("Starting training. Logging to %s" % logdir)
 for epoch in range(1, args.epochs + 1):

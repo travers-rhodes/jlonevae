@@ -16,9 +16,12 @@ from jlonevae_lib.architecture.save_model import save_conv_vae
 import jlonevae_lib.architecture.vae_jacobian as vj
 from jlonevae_lib.train.loss_function import vae_loss_function 
 
+# based on reviewer feedback: 
+## gamma_type identifies whether we are regularizing the L1 norm of the jacobian (jlone)
+## or whether we are regularizing the L2 norm of the jacobian (jltwo)
 class JLOneVAETrainer(object):
     def __init__(self, model, data_loader, beta, gamma, device, 
-        log_dir, lr, annealingBatches, record_loss_every=100):
+        log_dir, lr, annealingBatches, record_loss_every=100, regularization_type="jlone"):
       self.model = model
       self.data_loader = data_loader
       self.beta = beta
@@ -30,6 +33,7 @@ class JLOneVAETrainer(object):
       self.num_batches_seen = 0
       self.annealingBatches = annealingBatches
       self.record_loss_every = record_loss_every
+      self.regularization_type = regularization_type
 
     def train(self):
       # set model to "training mode"
@@ -56,8 +60,12 @@ class JLOneVAETrainer(object):
         # short-circuit calc if gamma is 0 (no JL1-VAE loss)
         if tmp_gamma == 0:
             ICA_loss = torch.tensor(0)
-        else:
+        elif self.regularization_type == "jlone":
             ICA_loss = vj.jacobian_loss_function(self.model, noisy_mu, logvar, self.device)
+        elif self.regularization_type == "jltwo":
+            ICA_loss = vj.jacobian_l2_loss_function(self.model, noisy_mu, logvar, self.device)
+        else:
+            raise RuntimeException(f"Unknown gamma type {self.gamma_type}. Valid options are 'jlone' and 'jltwo'")
         loss += tmp_gamma * ICA_loss
         loss.backward()
         self.optimizer.step()
