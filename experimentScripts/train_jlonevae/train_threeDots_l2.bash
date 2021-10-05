@@ -12,7 +12,7 @@ export DISENTANGLEMENT_LIB_DATA="data/"
 export AICROWD_DATASET_NAME="threeDotsCache"
 for seed in {11..20}
 do
-  for gamma in 0.05
+  for gamma in 0.1
   do
     echo "Running with seed: $seed"
     python ./jlonevae_lib/train/train_jlonevae_models.py --beta 4 --gamma $gamma --latent-dim 10 --epochs 60 --annealingBatches 100000 --lr 0.0001 --regularization_type jltwo --seed $seed
