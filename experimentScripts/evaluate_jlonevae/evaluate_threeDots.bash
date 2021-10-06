@@ -11,7 +11,7 @@ conda activate jlonevae
 export AICROWD_DATASET_NAME="threeDots"
 
 # to filter down which experiments are evaluated, add a search string here
-export experimentNameFilter="_lone_beta4_0000_ica0_1000_lat10_"
+export experimentNameFilter="_lone_beta4_0000_ica0_0000_lat10_"
 
 export PYTHONPATH="./:./disentanglement_lib"
 export DISENTANGLEMENT_LIB_DATA="data"
