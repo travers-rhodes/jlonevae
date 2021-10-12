@@ -4,6 +4,7 @@ logs/*
 data/mpi3d_real
 data/threeDots
 data/naturalImages
+data/orl_faces
 __pycache__
 .ipynb_checkpoints
 .nfs*
