@@ -16,3 +16,6 @@ experimentScripts/visualizations/*/*/*.png
 naturalImageDownload/
 standardModelsDownload/
 threeDotsDownload/
+trainedStandardModelsCameraReady20211008/
+trainedStandardModelsContinueRecalculation20211008/
+previousTrainedStandardModelsCopiedOn20211015/

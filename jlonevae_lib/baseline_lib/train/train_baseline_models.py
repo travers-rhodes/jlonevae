@@ -41,7 +41,7 @@ def train_on_three_dots(original_model_num, output_directory="trainedStandardMod
 # Thus, the following indices ranges gives the 3rd hyperparameter choice for
 # each of the 6 models:
 
-for seed_number_adder in np.arange(1,10):
+for seed_number_adder in range(10):
   original_model_nums = np.arange(100,1800,300, dtype=np.int) + seed_number_adder
   for omn in original_model_nums:
-    train_on_three_dots(omn)
+    train_on_three_dots(omn,"trainedStandardModels")
