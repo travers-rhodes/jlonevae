@@ -51,6 +51,13 @@ numbers identify which configuration was used from
 [disentanglement_lib](https://github.com/google-research/disentanglement_lib#reproducing-prior-experiments),
 now trained on the three-dots dataset.
 
+##### Three-dots Data with JL2 Regularization (appendix)
+Based on reviewer feedback, we also include (in the appendix) results of regularizing by the L2 norm of the Jacobian.
+These models can be trained by running
+```train
+./experimentScripts/train_jlonevae/train_threeDots_l2.bash
+```
+
 #### MPI3D-Multi
 To train the mpi3d-multi models in the paper,
 download [`mpi3d_real`](https://github.com/rr-learning/disentanglement_dataset) (12 gigabytes, so takes a while to download) by running
