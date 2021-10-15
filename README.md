@@ -42,6 +42,8 @@ Training logs are written to the `./logs` directory and the trained model is
 written to a subdirectory of `./trainedModels` (both as a PyTorch JIT module for use with
 [`disentanglement_lib`](https://github.com/google-research/disentanglement_lib) and also using `torch.save(model.state_dict(), ...)`).
 
+
+##### Three-dots Data baseline models
 Baseline models, for comparison, are trained by calling
 ```
 ./experimentScripts/train_baseline/train_standard_tf_models.bash
