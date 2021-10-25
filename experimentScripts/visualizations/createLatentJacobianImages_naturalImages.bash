@@ -9,10 +9,10 @@ conda activate jlonevae
 
 export PYTHONPATH="./"
 
-experimentName=naturalImages
+experimentName=trainedNaturalImageModels
 
 for latentDim in 10
 do
-python3 experimentScripts/visualizations/createLatentJacobianImages_naturalImages.py --experimentName $experimentName --datasetName naturalImages --beta 0.01 --annealingBatches 50000 --latentDim $latentDim --batchNumber 100096
-python3 experimentScripts/visualizations/createLatentJacobianImages_naturalImages.py --experimentName $experimentName --datasetName naturalImages --beta 0.01 --annealingBatches 50000 --latentDim $latentDim --batchNumber 100096 --gamma 0.01
+python3 experimentScripts/visualizations/createLatentJacobianImages_naturalImages.py --experimentName $experimentName --datasetName naturalImages --beta 0.01 --annealingBatches 50000 --latentDim $latentDim --batchNumber 100000
+python3 experimentScripts/visualizations/createLatentJacobianImages_naturalImages.py --experimentName $experimentName --datasetName naturalImages --beta 0.01 --annealingBatches 50000 --latentDim $latentDim --batchNumber 100000 --gamma 0.01
 done

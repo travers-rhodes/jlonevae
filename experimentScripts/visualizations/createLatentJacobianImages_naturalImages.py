@@ -76,11 +76,11 @@ def getModelName(beta, gamma, latent_dim):
     runId)
   return(model_name)
 
-device="cuda"
+device="cpu"
 
 def get_model_and_enc(latent_dim, beta, ica_factor, data):
   modelname = getModelName(beta, ica_factor, latent_dim)
-  search_path = "trainedModels/%s/%s/*/cache_batch_no%d" % (experimentName, modelname,batchNumber)
+  search_path = "%s/%s/cache_batch_no%d" % (experimentName, modelname,batchNumber)
   print(search_path)
   matching_model_paths = glob.glob(search_path)
   model_path = matching_model_paths[0]
