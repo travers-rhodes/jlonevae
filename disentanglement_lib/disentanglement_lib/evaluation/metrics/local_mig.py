@@ -1,6 +1,6 @@
 # coding=utf-8
 # Copyright 2018 The DisentanglementLib Authors.  All rights reserved.
-# Copyright 2021 JLONEVAE_ANONYMOUS_AUTHORS.  All rights reserved.
+# Copyright 2021 Travers Rhodes.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 Based on "Isolating Sources of Disentanglement in Variational Autoencoders"
 (https://arxiv.org/pdf/1802.04942.pdf).
 
-Modified from mig.py by JLONEVAE_ANONYMOUS_AUTHORS to apply the MIG metric to 
+Modified from mig.py by Travers Rhodes to apply the MIG metric to 
 a local sample of data rather than a global sample
 """
 from absl import logging

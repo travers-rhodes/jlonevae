@@ -1,6 +1,6 @@
 # coding=utf-8
 # Copyright 2018 The DisentanglementLib Authors.  All rights reserved.
-# Copyright 2021 JLONEVAE_ANONYMOUS_AUTHORS.  All rights reserved.
+# Copyright 2021 Travers Rhodes.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 """Example script how to get started with research using disentanglement_lib.
 
-This file was modified by JLONEVAE_ANONYMOUS_AUTHORS in 2021
+This file was modified by Travers Rhodes in 2021
 
 To run the example, please change the working directory to the containing folder
 and run:

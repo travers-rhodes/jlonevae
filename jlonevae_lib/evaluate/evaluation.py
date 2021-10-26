@@ -1,6 +1,6 @@
 # coding=utf-8
 # Copyright 2018 The DisentanglementLib Authors.  All rights reserved.
-# Copyright 2021 JLONEVAE_ANONYMOUS_AUTHORS.  All rights reserved.
+# Copyright 2021 Travers Rhodes.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file was modified by JLONEVAE_ANONYMOUS_AUTHORS 
+# This file was modified by Travers Rhodes 
 
 # We group all the imports at the top.
 from __future__ import absolute_import
@@ -39,7 +39,7 @@ import disentanglement_lib
 #try:
 # Monkey patch in neurips2019_disentanglement_challengs's evaluate, 
 # which supports pytorch *and* tensorflow.
-if True: #JLONEVAE_ANONYMOUS_AUTHORS: we use pytorch, so don't hide any errors about it
+if True: #Travers Rhodes: we use pytorch, so don't hide any errors about it
     import jlonevae_lib.evaluate.evaluate_helper as evaluate
     disentanglement_lib.evaluation.evaluate = evaluate
     MONKEY = True

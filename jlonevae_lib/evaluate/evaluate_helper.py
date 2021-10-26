@@ -1,6 +1,6 @@
 # coding=utf-8
 # Copyright 2018 The DisentanglementLib Authors.  All rights reserved.
-# Copyright 2020 JLONEVAE_ANONYMOUS_AUTHORS.  All rights reserved.
+# Copyright 2021 Travers Rhodes.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # limitations under the License
 
 # This file was pulled from https://github.com/AIcrowd/neurips2019_disentanglement_challenge_starter_kit/blob/master/evaluate.py
-# This file was modified by JLONEVAE_ANONYMOUS_AUTHORS 
+# This file was modified by Travers Rhodes 
 
 """Evaluation protocol to compute metrics."""
 from __future__ import absolute_import
