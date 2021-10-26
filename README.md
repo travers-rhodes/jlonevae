@@ -105,8 +105,8 @@ jupyter notebook
 Then, within the folder `experimentScripts/visualizations`, open any of the
 following Jupyter notebooks to view the associated Jacobian columns:
 ```
-ExampleJacobianValues_ThreeDots.ipynb
-ExampleJacobianValues-Mpi3d-multi.ipynb
+Figure2-ExampleJacobianValues_ThreeDots.ipynb
+Figure3-ExampleJacobianValues-Mpi3d-multi.ipynb
 ```
 
 For natural image data, you can create Jacobian embeddings for a sequence of
@@ -137,8 +137,8 @@ jupyter notebook
 Then, within the folder `experimentScripts/visualizations`, open any of the
 following Jupyter notebooks to generate comparison plots:
 ```
-LocalDisentanglementComparedToBaseline.ipynb  
-ScatterplotMIGandModularity_VaryingRho.ipynb
+Figure4-LinePlotMIGandModularity.ipynb
+Figure5-LocalDisentanglementComparedToBaseline.ipynb  
 ```
 
 ## Pre-trained Models
